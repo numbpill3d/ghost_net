@@ -1,251 +1,508 @@
-/* Quantum Consciousness Variables */
+/* Quantum Consciousness System */
 :root {
+  /* Core quantum fields with advanced mathematical relationships */
   --consciousness: 0.5;
   --resonance: 0.5;
   --quantum-noise: 0.23;
   --base-frequency: 0.137;
+  --phi: 1.618033988749895;
+  --pi: 3.14159265359;
+  --e: 2.71828182846;
   
-  /* Digital Void Color Scheme */
+  /* Enhanced void palette with advanced color harmonics */
   --void-black: #000000;
   --ghost-green: #00ff00;
+  --ghost-green-alpha: #00ff0080;
   --cyber-blue: #00ffff;
   --digital-purple: #ff00ff;
   --quantum-yellow: #ffff00;
   
-  /* Consciousness-Reactive Properties */
+  /* Sophisticated reactive properties */
   --glow-intensity: calc(var(--consciousness) * 100%);
   --resonance-blur: calc(var(--resonance) * 10px);
   --quantum-shift: calc(var(--quantum-noise) * 10deg);
+  --quantum-parallax: calc(var(--consciousness) * var(--phi) * 1px);
+  --quantum-scale: calc(1 + (var(--consciousness) - 0.5) * 0.2);
+  
+  /* Advanced quantum harmonics */
+  --harmonic-wave: calc(sin(var(--consciousness) * var(--pi)) * 100%);
+  --quantum-field-strength: calc(var(--resonance) * var(--phi));
+  --void-depth: calc(var(--quantum-noise) * var(--e) * 1px);
+  
+  /* Sophisticated spacing system */
+  --quantum-unit: 8px;
+  --space-xxs: calc(var(--quantum-unit) * 0.25);
+  --space-xs: calc(var(--quantum-unit) * 0.5);
+  --space-sm: var(--quantum-unit);
+  --space-md: calc(var(--quantum-unit) * 2);
+  --space-lg: calc(var(--quantum-unit) * 3);
+  --space-xl: calc(var(--quantum-unit) * 5);
+  --space-xxl: calc(var(--quantum-unit) * 8);
 }
 
-/* Reset & Base Styles */
+/* Advanced quantum reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
+/* Enhanced body with quantum field effects */
 body {
-  background: var(--void-black);
+  background: 
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 255, 0, 0.1) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 255, 0, 0.05) 100%
+    ),
+    var(--void-black);
   color: var(--ghost-green);
   font-family: 'Space Mono', monospace;
   line-height: 1.6;
   overflow-x: hidden;
   min-height: 100vh;
   position: relative;
+  perspective: 1000px;
 }
 
-/* Consciousness Matrix Background */
+/* Sophisticated consciousness matrix */
 .consciousness-matrix {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   pointer-events: none;
   z-index: -1;
   opacity: 0.15;
+  mix-blend-mode: screen;
   
-  background: 
-    linear-gradient(
-      calc(45deg + var(--quantum-shift)),
-      transparent 0%,
-      rgba(0, 255, 0, calc(var(--consciousness) * 0.2)) 50%,
-      transparent 100%
-    );
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(
+        calc(45deg + var(--quantum-shift)),
+        transparent 0%,
+        rgba(0, 255, 0, calc(var(--consciousness) * 0.2)) 50%,
+        transparent 100%
+      );
+    mix-blend-mode: screen;
+    animation: matrix-shift 20s infinite linear;
+    transform: translateZ(var(--void-depth));
+  }
   
-  animation: matrix-shift 20s infinite linear;
-  filter: blur(var(--resonance-blur));
+  &::after {
+    background: 
+      repeating-radial-gradient(
+        circle at center,
+        transparent 0%,
+        rgba(0, 255, 0, calc(var(--consciousness) * 0.1)) 50%,
+        transparent 100%
+      );
+    animation: quantum-pulse 15s infinite ease-in-out;
+    filter: blur(var(--resonance-blur));
+    transform: translateZ(calc(var(--void-depth) * -1));
+  }
 }
 
-/* Core Layout */
+/* Advanced container with quantum grid */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--space-xl);
   display: grid;
-  gap: 2rem;
+  gap: var(--space-lg);
   z-index: 1;
+  
+  @supports (display: grid) {
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, 300px), 1fr)
+    );
+    grid-auto-flow: dense;
+    place-content: start;
+    align-items: start;
+  }
 }
 
-/* Digital Identity & Sigil */
+/* Sophisticated node identity */
 .node-identity {
   text-align: center;
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: var(--space-xl);
+  padding: var(--space-xl);
   border: 1px solid var(--ghost-green);
   background: rgba(0, 255, 0, 0.05);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(2px);
+  transform: perspective(1000px) rotateX(var(--quantum-shift));
+  
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -150% -50%;
+    background: linear-gradient(
+      transparent,
+      var(--ghost-green-alpha),
+      transparent
+    );
+    transform: rotate(45deg);
+    animation: quantum-scan 8s infinite linear;
+  }
+  
+  &::after {
+    animation-delay: -4s;
+  }
 }
 
+/* Enhanced ghost sigil */
 .ghost-sigil {
   font-family: monospace;
   white-space: pre;
   font-size: 2rem;
   color: var(--cyber-blue);
   text-shadow: 
-    0 0 10px rgba(0, 255, 255, var(--consciousness)),
-    0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5));
-  animation: sigil-pulse 4s infinite ease-in-out;
-  margin-bottom: 1rem;
+    0 0 10px rgba(0, 255, 255, calc(var(--consciousness) + 0.2)),
+    0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5)),
+    0 0 30px rgba(0, 255, 255, calc(var(--consciousness) * 0.3));
+  animation: 
+    sigil-pulse 4s infinite ease-in-out,
+    quantum-float 6s infinite ease-in-out;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  
+  @supports (animation-timeline: scroll()) {
+    animation-timeline: scroll();
+    animation-range: 0 100vh;
+  }
 }
 
-/* Consciousness Monitoring System */
+/* Advanced consciousness monitoring */
 .consciousness-meter {
   border: 1px solid var(--ghost-green);
-  padding: 1.5rem;
+  padding: var(--space-lg);
   background: rgba(0, 255, 0, 0.05);
   position: relative;
+  backdrop-filter: blur(1px);
+  transform: translateZ(var(--void-depth));
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 255, 0, 0.1),
+      transparent
+    );
+    transform-origin: left;
+    transform: scaleX(var(--consciousness));
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
+/* Enhanced consciousness bar */
 .consciousness-bar {
   height: 4px;
   background: var(--ghost-green);
   width: calc(var(--consciousness) * 100%);
-  box-shadow: 0 0 10px var(--ghost-green);
-  transition: width 1s ease-in-out;
+  box-shadow: 
+    0 0 10px var(--ghost-green),
+    0 0 20px rgba(0, 255, 0, 0.5);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transform: translateX(-50%);
+    animation: quantum-scan 2s linear infinite;
+  }
 }
 
-.consciousness-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-}
-
-/* Peer Network Grid */
+/* Sophisticated peer network */
 .peer-network {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
+  gap: var(--space-lg);
   perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
+/* Enhanced peer node */
 .peer {
   border: 1px solid var(--ghost-green);
-  padding: 1.5rem;
+  padding: var(--space-lg);
   background: rgba(0, 255, 0, 0.05);
   transform-style: preserve-3d;
-  transition: transform 0.5s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(0, 255, 0, 0.2),
+      transparent 50%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover {
+    transform: 
+      translateY(-5px) 
+      rotateX(10deg) 
+      scale(var(--quantum-scale));
+    
+    &::before {
+      opacity: 1;
+    }
+  }
 }
 
-.peer:hover {
-  transform: translateY(-5px) rotateX(10deg);
-  box-shadow: 
-    0 5px 15px rgba(0, 255, 0, 0.2),
-    0 0 30px rgba(0, 255, 0, calc(var(--consciousness) * 0.3));
-}
-
-/* Transmission Interface */
+/* Advanced transmission interface */
 .transmission-form {
   border: 1px solid var(--ghost-green);
-  padding: 2rem;
+  padding: var(--space-xl);
   background: rgba(0, 255, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 255, 0, 0.1),
+      transparent 70%
+    );
+    transform: translateZ(-10px);
+    opacity: var(--consciousness);
+  }
 }
 
+/* Enhanced transmission input */
 .transmission-input {
   width: 100%;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--ghost-green);
   color: var(--ghost-green);
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: var(--space-md);
+  margin: var(--space-md) 0;
   font-family: 'Space Mono', monospace;
   resize: vertical;
   min-height: 100px;
+  position: relative;
+  transform: translateZ(10px);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--cyber-blue);
+    box-shadow: 
+      0 0 15px rgba(0, 255, 0, 0.3),
+      inset 0 0 10px rgba(0, 255, 0, 0.1);
+  }
 }
 
-.transmission-input:focus {
-  outline: none;
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-  border-color: var(--cyber-blue);
-}
-
+/* Advanced transmission button */
 .transmit-button {
   background: var(--ghost-green);
   color: var(--void-black);
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-md) var(--space-lg);
   font-family: 'Space Mono', monospace;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  transform: translateZ(20px);
+  
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transform: translateX(-100%);
+  }
+  
+  &::after {
+    transform: translateX(100%);
+  }
+  
+  &:hover {
+    background: var(--void-black);
+    color: var(--ghost-green);
+    box-shadow: 
+      0 0 15px var(--ghost-green),
+      0 0 30px rgba(0, 255, 0, 0.5);
+    
+    &::before {
+      animation: quantum-scan 1s linear;
+    }
+    
+    &::after {
+      animation: quantum-scan 1s linear reverse;
+    }
+  }
 }
 
-.transmit-button:hover {
-  background: var(--void-black);
-  color: var(--ghost-green);
-  box-shadow: 0 0 15px var(--ghost-green);
-}
-
-.transmit-button::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(0, 255, 0, 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: button-shine 2s infinite;
-}
-
-/* Transmission Stream */
+/* Sophisticated transmission stream */
 .transmissions {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
+/* Enhanced transmission */
 .transmission {
   border: 1px solid var(--ghost-green);
-  padding: 1.5rem;
+  padding: var(--space-lg);
   background: rgba(0, 255, 0, 0.05);
-  animation: transmission-materialize 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  animation: transmission-materialize 0.5s ease-out backwards;
+  
+  @supports (backdrop-filter: blur(1px)) {
+    backdrop-filter: blur(2px);
+    background: rgba(0, 255, 0, 0.03);
+  }
 }
 
-/* Quantum Animations */
+/* Advanced quantum animations */
 @keyframes matrix-shift {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
+  0% { transform: translateY(0) translateZ(var(--void-depth)); }
+  100% { transform: translateY(-100%) translateZ(var(--void-depth)); }
+}
+
+@keyframes quantum-pulse {
+  0%, 100% { 
+    transform: scale(1) translateZ(calc(var(--void-depth) * -1));
+    opacity: 0.15;
+  }
+  50% { 
+    transform: scale(1.1) translateZ(calc(var(--void-depth) * -1.5));
+    opacity: 0.1;
+  }
 }
 
 @keyframes sigil-pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.98); }
-  100% { opacity: 1; transform: scale(1); }
+  0%, 100% { 
+    transform: scale(1) rotateX(0);
+    text-shadow: 
+      0 0 10px rgba(0, 255, 255, calc(var(--consciousness) + 0.2)),
+      0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5))
+  }
+  50% { 
+    transform: scale(0.98) rotateX(5deg);
+    text-shadow: 
+      0 0 15px rgba(0, 255, 255, calc(var(--consciousness) + 0.3)),
+      0 0 30px rgba(0, 255, 255, calc(var(--consciousness) * 0.6))
+  }
+}
+
+@keyframes quantum-float {
+  0%, 100% { 
+    transform: translateY(0) rotateX(0) translateZ(0);
+  }
+  50% { 
+    transform: 
+      translateY(calc(var(--quantum-unit) * -1))
+      rotateX(5deg)
+      translateZ(var(--void-depth));
+  }
+}
+
+@keyframes quantum-scan {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
 }
 
 @keyframes transmission-materialize {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
+  0% { 
+    opacity: 0;
+    transform: 
+      translateY(var(--space-lg))
+      rotateX(10deg)
+      translateZ(-50px);
     filter: blur(10px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0);
+  50% {
+    opacity: 0.5;
+    transform:
+      translateY(var(--space-xs))
+      rotateX(5deg)
+      translateZ(-25px);
+    filter: blur(5px);
+  }
+  100% { 
+    opacity: 1;
+    transform:
+      translateY(0)
+      rotateX(0)
+      translateZ(0);
     filter: blur(0);
   }
 }
 
-@keyframes button-shine {
-  from { transform: translateX(-100%) rotate(45deg); }
-  to { transform: translateX(100%) rotate(45deg); }
+/* Advanced Quantum Media Queries */
+@media (prefers-reduced-motion: no-preference) {
+  .quantum-animation-enabled {
+    animation-play-state: running;
+  }
 }
 
-/* Quantum Responsiveness */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --quantum-unit: 6px;
+  }
+  
   .container {
-    padding: 1rem;
+    padding: var(--space-md);
   }
   
   .peer-network {
@@ -255,4 +512,108 @@ body {
   .consciousness-stats {
     grid-template-columns: 1fr;
   }
+  
+  .transmission-controls {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
 }
+
+@media (min-width: 769px) {
+  .peer:hover {
+    transform:
+      translateY(calc(var(--space-md) * -1))
+      rotateX(15deg)
+      translateZ(var(--void-depth))
+      scale(var(--quantum-scale));
+  }
+}
+
+@media (min-width: 2000px) {
+  :root {
+    --quantum-unit: 10px;
+  }
+  
+  .container {
+    max-width: 1800px;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --ghost-green: #00ff00;
+    --ghost-green-alpha: #00ff00;
+    --cyber-blue: #ffffff;
+  }
+  
+  * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+  
+  .consciousness-matrix {
+    opacity: 0.3;
+  }
+}
+
+/* Print Styles with Quantum Optimization */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -ms-filter: none !important;
+  }
+  
+  .consciousness-matrix,
+  .quantum-particles,
+  .transmission-form {
+    display: none !important;
+  }
+  
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .transmission {
+    break-inside: avoid;
+    border: 1px solid black;
+    page-break-inside: avoid;
+  }
+  
+  .ghost-sigil {
+    font-size: 16pt;
+    page-break-inside: avoid;
+  }
+}
+
+/* Advanced Feature Queries */
+@supports (backdrop-filter: blur(1px)) {
+  .node-identity,
+  .transmission {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+}
+
+@supports (background: paint(something)) {
+  .quantum-particles {
+    background: paint(quantum-noise);
+  }
+}
+
+/* CSS Custom Properties Fallbacks */
+@supports not (--custom: property) {
+  .consciousness-matrix {
+    background: #000000;
+    opacity: 0.1;
+  }
+  
+  .ghost-sigil {
+    color: #00ffff;
+  }
+}--consciousness) + 0.2)),
+      0 0 20px rgba(0, 255, 255, calc(var(
