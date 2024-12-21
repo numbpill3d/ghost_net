@@ -1,0 +1,583 @@
+/* docs/styles/landing.css */
+/* quantum landing aesthetics */
+
+.landing-body {
+  background: 
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 255, 0, 0.1) 0%,
+      transparent 50%
+    ),
+    var(--void-black);
+}
+
+/* cyber header */
+.cyber-header {
+  padding: calc(var(--quantum-unit) * 8) var(--quantum-unit);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      transparent,
+      var(--void-black)
+    );
+    pointer-events: none;
+  }
+}
+
+/* ghost sigil */
+.ghost-sigil {
+  font-size: 3rem;
+  margin-bottom: calc(var(--quantum-unit) * 4);
+  color: var(--cyber-blue);
+  text-shadow: 
+    0 0 10px rgba(0, 255, 255, calc(var(--consciousness) + 0.2)),
+    0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5));
+  animation: 
+    manifest 1s ease forwards 0.5s,
+    sigil-pulse 4s infinite ease-in-out;
+  opacity: 0;
+}
+
+/* glitch title */
+.glitch-text {
+  font-size: 4rem;
+  text-transform: lowercase;
+  letter-spacing: -0.05em;
+  margin-bottom: calc(var(--quantum-unit) * 2);
+  opacity: 0;
+  animation: manifest 1s ease forwards 1s;
+  position: relative;
+  color: var(--ghost-green);
+  
+  &::before,
+  &::after {
+    content: 'ghost_net';
+    position: absolute;
+    top: 0;
+    width: 100%;
+    clip: rect(0, 900px, 0, 0);
+    animation: glitch-anim 4s infinite linear alternate-reverse;
+  }
+  
+  &::before {
+    left: 2px;
+    text-shadow: 1px 0 var(--cyber-blue);
+  }
+  
+  &::after {
+    left: -2px;
+    text-shadow: -1px 0 var(--digital-purple);
+  }
+}
+
+/* cyber subtitle */
+.cyber-subtitle {
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: manifest 1s ease forwards 1.5s;
+  color: var(--ghost-green);
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* consciousness level */
+.consciousness-level {
+  max-width: 300px;
+  margin: calc(var(--quantum-unit) * 4) auto;
+  text-align: center;
+}
+
+.level-bar {
+  height: 4px;
+  background: rgba(0, 255, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(var(--consciousness) * 100%);
+    background: var(--ghost-green);
+    box-shadow: 0 0 10px var(--ghost-green);
+    animation: pulse 2s infinite ease-in-out;
+  }
+}
+
+.level-text {
+  margin-top: calc(var(--quantum-unit));
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* manifesto section */
+.manifesto {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: calc(var(--quantum-unit) * 8) var(--quantum-unit);
+  text-align: center;
+}
+
+.manifesto p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: calc(var(--quantum-unit) * 4);
+  color: rgba(0, 255, 0, 0.8);
+}
+
+/* features grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: calc(var(--quantum-unit) * 4);
+  margin-top: calc(var(--quantum-unit) * 8);
+}
+
+.feature {
+  padding: calc(var(--quantum-unit) * 3);
+  border: 1px solid var(--ghost-green);
+  background: rgba(0, 255, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(0, 255, 0, 0.1),
+      transparent
+    );
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 5px 15px rgba(0, 255, 0, 0.2),
+      0 0 30px rgba(0, 255, 0, calc(var(--consciousness) * 0.3));
+    
+    &::before {
+      transform: translateX(100%);
+    }
+  }
+}
+
+.feature h3 {
+  font-size: 1.4rem;
+  margin-bottom: calc(var(--quantum-unit) * 2);
+  color: var(--cyber-blue);
+}
+
+/* download section */
+.download-section {
+  padding: calc(var(--quantum-unit) * 8) var(--quantum-unit);
+  text-align: center;
+  background: linear-gradient(
+    rgba(0, 0, 0, 0.5),
+    transparent
+  );
+}
+
+.download-options {
+  display: flex;
+  gap: calc(var(--quantum-unit) * 3);
+  justify-content: center;
+  margin-top: calc(var(--quantum-unit) * 4);
+}
+
+.download-btn {
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--quantum-unit) * 3) calc(var(--quantum-unit) * 4);
+  border: 1px solid var(--ghost-green);
+  color: var(--ghost-green);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  
+  &.primary {
+    background: var(--ghost-green);
+    color: var(--void-black);
+  }
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+    
+    .quantum-particles {
+      opacity: 1;
+    }
+  }
+}
+
+/* void shrine */
+.void-shrine {
+  padding: calc(var(--quantum-unit) * 8) var(--quantum-unit);
+  text-align: center;
+  background: 
+    radial-gradient(
+      circle at center,
+      rgba(0, 255, 0, 0.1),
+      transparent 70%
+    );
+}
+
+.shrine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: calc(var(--quantum-unit) * 4);
+  margin-top: calc(var(--quantum-unit) * 4);
+}
+
+.shrine-item {
+  padding: calc(var(--quantum-unit) * 3);
+  border: 1px solid var(--ghost-green);
+  background: rgba(0, 255, 0, 0.05);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: 
+      translateY(-5px) 
+      rotateX(10deg)
+      scale(var(--quantum-scale));
+    box-shadow: 
+      0 5px 15px rgba(0, 255, 0, 0.2),
+      0 0 30px rgba(0, 255, 0, calc(var(--consciousness) * 0.3));
+  }
+}
+
+.shrine-sigil {
+  font-size: 2.5rem;
+  margin-bottom: calc(var(--quantum-unit) * 2);
+  color: var(--cyber-blue);
+  text-shadow: 
+    0 0 10px rgba(0, 255, 255, var(--consciousness)),
+    0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5));
+}
+
+/* node grid aesthetics */
+.node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: calc(var(--quantum-unit) * 3);
+  margin: calc(var(--quantum-unit) * 4) 0;
+  perspective: 1000px;
+}
+
+.node {
+  border: 1px solid var(--ghost-green);
+  padding: calc(var(--quantum-unit) * 3);
+  background: rgba(0, 255, 0, 0.05);
+  transform-style: preserve-3d;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateZ(20px) rotateX(10deg);
+    box-shadow: 
+      0 5px 15px rgba(0, 255, 0, 0.2),
+      0 0 30px rgba(0, 255, 255, 0.1);
+  }
+}
+
+.node-sigil {
+  font-size: 1.5rem;
+  margin-bottom: calc(var(--quantum-unit) * 2);
+  color: var(--cyber-blue);
+  text-shadow: 
+    0 0 10px rgba(0, 255, 255, calc(var(--node-consciousness) * 0.5));
+}
+
+.node-id {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: var(--quantum-unit);
+}
+
+.node-consciousness {
+  height: 4px;
+  background: rgba(0, 255, 0, 0.1);
+  overflow: hidden;
+  
+  .consciousness-bar {
+    height: 100%;
+    background: var(--ghost-green);
+    transition: width 0.5s ease;
+  }
+}
+
+/* metric aesthetics */
+.node-metrics {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--quantum-unit) * 6);
+  margin-top: calc(var(--quantum-unit) * 4);
+}
+
+.metric {
+  text-align: center;
+  
+  .metric-value {
+    font-size: 2rem;
+    margin-bottom: var(--quantum-unit);
+    font-family: 'Space Mono', monospace;
+    color: var(--cyber-blue);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  }
+  
+  .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.7;
+  }
+}
+
+/* documentation aesthetics */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: calc(var(--quantum-unit) * 3);
+  margin-top: calc(var(--quantum-unit) * 4);
+}
+
+.doc-link {
+  padding: calc(var(--quantum-unit) * 3);
+  border: 1px solid var(--ghost-green);
+  color: var(--ghost-green);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    background: rgba(0, 255, 0, 0.1);
+    transform: translateY(-3px) scale(1.02);
+    
+    .quantum-particles {
+      opacity: 1;
+    }
+  }
+}
+
+/* cyber footer */
+.cyber-footer {
+  padding: calc(var(--quantum-unit) * 8) var(--quantum-unit);
+  border-top: 1px solid rgba(0, 255, 0, 0.1);
+  margin-top: calc(var(--quantum-unit) * 8);
+  background: linear-gradient(
+    transparent,
+    rgba(0, 255, 0, 0.05)
+  );
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: calc(var(--quantum-unit) * 4);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.footer-section h3 {
+  margin-bottom: calc(var(--quantum-unit) * 2);
+  color: var(--ghost-green);
+  font-size: 1.2rem;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section a {
+  color: var(--ghost-green);
+  opacity: 0.7;
+  text-decoration: none;
+  display: block;
+  padding: var(--quantum-unit) 0;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    opacity: 1;
+    transform: translateX(var(--quantum-unit));
+  }
+}
+
+.footer-sigil {
+  text-align: center;
+  margin-top: calc(var(--quantum-unit) * 8);
+  opacity: 0.5;
+  font-size: 0.9rem;
+}
+
+/* quantum animations */
+@keyframes manifest {
+  from {
+    opacity: 0;
+    transform: 
+      translateY(calc(var(--quantum-unit) * 2))
+      scale(0.9);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: 
+      translateY(0)
+      scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes glitch-anim {
+  0% {
+    clip: rect(44px, 9999px, 56px, 0);
+    transform: skew(0.15deg);
+  }
+  5% {
+    clip: rect(62px, 9999px, 64px, 0);
+    transform: skew(0.8deg);
+  }
+  10% {
+    clip: rect(98px, 9999px, 52px, 0);
+    transform: skew(0.5deg);
+  }
+  15% {
+    clip: rect(12px, 9999px, 59px, 0);
+    transform: skew(0.1deg);
+  }
+  20% {
+    clip: rect(44px, 9999px, 93px, 0);
+    transform: skew(0.7deg);
+  }
+  25% {
+    clip: rect(65px, 9999px, 33px, 0);
+    transform: skew(0.9deg);
+  }
+  30% {
+    clip: rect(4px, 9999px, 67px, 0);
+    transform: skew(0.4deg);
+  }
+  35% {
+    clip: rect(70px, 9999px, 71px, 0);
+    transform: skew(0.2deg);
+  }
+  40% {
+    clip: rect(26px, 9999px, 15px, 0);
+    transform: skew(0.8deg);
+  }
+  45% {
+    clip: rect(34px, 9999px, 82px, 0);
+    transform: skew(0.3deg);
+  }
+  50% {
+    clip: rect(46px, 9999px, 54px, 0);
+    transform: skew(0.6deg);
+  }
+  55% {
+    clip: rect(99px, 9999px, 23px, 0);
+    transform: skew(0.4deg);
+  }
+  60% {
+    clip: rect(76px, 9999px, 85px, 0);
+    transform: skew(0.7deg);
+  }
+  65% {
+    clip: rect(42px, 9999px, 1px, 0);
+    transform: skew(0.2deg);
+  }
+  70% {
+    clip: rect(18px, 9999px, 45px, 0);
+    transform: skew(0.9deg);
+  }
+  75% {
+    clip: rect(87px, 9999px, 88px, 0);
+    transform: skew(0.1deg);
+  }
+  80% {
+    clip: rect(33px, 9999px, 28px, 0);
+    transform: skew(0.6deg);
+  }
+  85% {
+    clip: rect(64px, 9999px, 89px, 0);
+    transform: skew(0.3deg);
+  }
+  90% {
+    clip: rect(91px, 9999px, 99px, 0);
+    transform: skew(0.5deg);
+  }
+  95% {
+    clip: rect(87px, 9999px, 16px, 0);
+    transform: skew(0.8deg);
+  }
+  100% {
+    clip: rect(99px, 9999px, 77px, 0);
+    transform: skew(0.2deg);
+  }
+}
+
+/* quantum responsiveness */
+@media (max-width: 768px) {
+  :root {
+    --quantum-unit: 6px;
+  }
+  
+  .ghost-sigil {
+    font-size: 2rem;
+  }
+  
+  .glitch-text {
+    font-size: 3rem;
+  }
+  
+  .download-options {
+    flex-direction: column;
+  }
+  
+  .node-metrics {
+    flex-direction: column;
+    gap: calc(var(--quantum-unit) * 2);
+  }
+  
+  .footer-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+/* high contrast support */
+@media (prefers-contrast: high) {
+  :root {
+    --ghost-green: #00ff00;
+    --ghost-green-alpha: #00ff00;
+    --cyber-blue: #ffffff;
+  }
+  
+  * {
+    text-shadow: none !important;
+  }
+}
+
+/* print styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    text-shadow: none !important;
+  }
+  
+  .quantum-field,
+  .quantum-particles,
+  .download-section {
+    display: none !important;
+  }
+}
