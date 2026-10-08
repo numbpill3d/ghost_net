@@ -60,7 +60,7 @@ export class GhostNet extends EventEmitter {
     this.peerNetwork.on('peer:connected', (peer) => this.emit('peer:connected', peer));
     this.peerNetwork.on('peer:disconnected', (peer) => this.emit('peer:disconnected', peer));
 
-    this.peerNetwork.initialize(this.identity, {
+    await this.peerNetwork.initialize(this.identity, {
       getConsciousness: () => this.quantumState.getCurrentLevel(),
       getTransmissions: () => this.transmissionHandler.list()
     });
@@ -149,7 +149,9 @@ export class GhostNet extends EventEmitter {
       publicKey: this.identity.publicKey,
       birthTimestamp: this.identity.birthTimestamp,
       version: this.config.version,
-      protocol: this.config.protocol
+      protocol: this.config.protocol,
+      // true when posting through this node needs its key
+      locked: Boolean(this.config.security.transmitKey)
     };
   }
 

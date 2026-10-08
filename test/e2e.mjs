@@ -92,6 +92,10 @@ try {
   await wait(`document.querySelector('#nodeId').textContent.includes(${JSON.stringify(b.id.slice(0, 8))})`, 'node id shown');
   log(`identity rendered: ${await text('#nodeId')}`);
 
+  if ((await text('#peerLink')) !== b.peerUrl) throw new Error('peer link wrong: ' + await text('#peerLink'));
+  if (!(await evaluate(`document.querySelector('#nodeKeyRow').hidden`))) throw new Error('key field shown on an open node');
+  log(`peer link shown: ${await text('#peerLink')}`);
+
   const sigil = await text('#nodeSigil');
   if (sigil.replace(/\s/g, '').length < 9) throw new Error('sigil not drawn: ' + JSON.stringify(sigil));
   log('sigil drawn from the node id');
@@ -177,6 +181,26 @@ try {
   if (order[0] !== 'sent with enter' || order[2] !== payload) throw new Error('history out of order: ' + JSON.stringify(order));
   await wait(`document.querySelector('#peerGrid').textContent.includes('alone')`, 'no-peer message');
   log('node A shows all three transmissions in order, and that it is alone now');
+
+  // --- a locked node asks for its key --------------------------------------
+  const locked = await void_.start({ TRANSMIT_KEY: 'keeper', BOOTSTRAP_NODES: a.peerUrl });
+  await cdp('Page.navigate', { url: locked.http });
+  await wait(`document.querySelector('#linkStatus')?.dataset.state === 'open'`, 'tunnel open on locked node');
+  await wait(`!document.querySelector('#nodeKeyRow').hidden`, 'key field shown');
+  const send = (key) => evaluate(`(() => {
+    document.querySelector('#nodeKey').value = ${JSON.stringify(key)};
+    document.querySelector('#transmissionInput').value = 'from the keeper';
+    document.querySelector('#transmitButton').click();
+  })()`);
+  await send('wrong');
+  await wait(`!document.querySelector('#quantumError').hidden`, 'locked error overlay');
+  const refusal = await text('#quantumErrorMessage');
+  await evaluate(`document.querySelector('.error-dismiss').click()`);
+  if ((await evaluate(`document.querySelector('#transmissionInput').value`)) !== 'from the keeper') throw new Error('draft lost after a refused transmission');
+  await send('keeper');
+  await wait(`[...document.querySelectorAll('#transmissions .transmission.own .transmission-content')].some(e => e.textContent === 'from the keeper')`, 'keeper transmission');
+  log(`locked node: wrong key refused ("${refusal}"), draft kept, right key accepted`);
+  errors.length = 0; // the refused request logs a 401, as intended
 
   // --- phone width ---------------------------------------------------------
   await viewport(390, 800, true);

@@ -32,6 +32,10 @@
                 <div class="link-status" id="linkStatus" data-state="connecting" role="status">
                     opening tunnel...
                 </div>
+                <div class="peer-link" title="give this address to another node as one of its BOOTSTRAP_NODES">
+                    peer link: <code id="peerLink"></code>
+                    <button id="copyPeerLink" class="copy-button" type="button">copy</button>
+                </div>
             </div>
         </header>
 
@@ -71,6 +75,11 @@
                     placeholder="enter your transmission to the void..."
                     rows="4"
                 ></textarea>
+                <div class="node-key" id="nodeKeyRow" hidden>
+                    <label for="nodeKey">node key</label>
+                    <input id="nodeKey" type="password" autocomplete="off" spellcheck="false"
+                           placeholder="this node is locked — enter its key to transmit">
+                </div>
                 <div class="transmission-controls">
                     <div class="quantum-signature">
                         <span id="quantumSignature">generating signature...</span>

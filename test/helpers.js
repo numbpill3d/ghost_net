@@ -74,10 +74,13 @@ export function createVoid() {
     };
   };
 
-  const transmit = async (node, content) => {
+  const transmit = async (node, content, key = null) => {
+    const headers = { 'content-type': 'application/json' };
+    if (key !== null) headers.authorization = `Bearer ${key}`;
+
     const response = await fetch(`${node.http}/api/transmit`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers,
       body: JSON.stringify({ content })
     });
     return { status: response.status, body: await response.json() };

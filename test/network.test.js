@@ -371,3 +371,54 @@ test('posting is rate limited per client', async (t) => {
   assert.deepEqual(statuses, [201, 201, 201, 429, 429]);
   assert.equal(node.ghostNet.getTransmissions().length, 3);
 });
+
+test('a locked node only transmits for holders of its key, but still relays and can be read', async (t) => {
+  const void_ = createVoid();
+  t.after(() => void_.close());
+
+  const open = await void_.start();
+  const locked = await void_.start({ TRANSMIT_KEY: 'only the keeper', BOOTSTRAP_NODES: open.peerUrl });
+  await void_.entangled(locked, 1);
+
+  assert.equal((await void_.get(locked, '/api/identity')).locked, true);
+  assert.equal((await void_.get(open, '/api/identity')).locked, false);
+
+  assert.equal((await void_.transmit(locked, 'no key')).status, 401);
+  assert.equal((await void_.transmit(locked, 'wrong key', 'only the keepeR')).status, 401);
+  assert.equal((await void_.transmit(locked, 'empty key', '')).status, 401);
+  assert.equal(locked.ghostNet.getTransmissions().length, 0);
+
+  const accepted = await void_.transmit(locked, 'from the keeper', 'only the keeper');
+  assert.equal(accepted.status, 201);
+  await until(() => open.ghostNet.transmissionHandler.has(accepted.body.transmission.id), 'locked -> open relay');
+
+  // the lock is on posting through the interface, not on the network
+  const outside = (await void_.transmit(open, 'from an open node')).body.transmission;
+  await until(() => locked.ghostNet.transmissionHandler.has(outside.id), 'open -> locked relay');
+  assert.equal((await void_.get(locked, '/api/transmissions')).transmissions.length, 2);
+});
+
+test('a node remembers peers that answered and finds them again without bootstrap nodes', async (t) => {
+  const void_ = createVoid();
+  t.after(() => void_.close());
+
+  const a = await void_.start({ PORT: '39414' });
+  const b = await void_.start({ BOOTSTRAP_NODES: a.peerUrl });
+  await void_.entangled(b, 1);
+  const { dataDir, id } = b;
+  await void_.stop(b);
+  await void_.entangled(a, 0);
+
+  // same data directory, no bootstrap list this time
+  const reborn = await void_.start({ DATA_DIR: dataDir });
+  assert.equal(reborn.id, id);
+  await void_.entangled(reborn, 1);
+  await void_.entangled(a, 1);
+
+  // with exchange off, remembered addresses are left alone
+  await void_.stop(reborn);
+  await void_.entangled(a, 0);
+  const hermit = await void_.start({ DATA_DIR: dataDir, PEER_EXCHANGE: 'false' });
+  await sleep(400);
+  assert.equal(hermit.ghostNet.getPeers().length, 0);
+});

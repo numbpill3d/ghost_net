@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { randomBytes } from 'node:crypto';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import WebSocket from 'ws';
 import { normalizePeerUrl } from '../../config.js';
 import { nodeIdFromPublicKey, verifySignature } from './identity.js';
@@ -15,6 +17,7 @@ const BUCKET_REFILL_PER_SECOND = 100;
 const MAX_STRIKES = 5;
 
 const EXCHANGE_INTERVAL = 60000;
+const ADDRESS_FILE = 'peers.json';
 const MAX_BUFFERED = 4 * 1024 * 1024;
 
 /** What a node signs to prove it holds the key behind its id. */
@@ -52,6 +55,9 @@ export class PeerNetwork extends EventEmitter {
     this.stopped = false;
     this._lastHeartbeat = 0;
     this._lastExchange = 0;
+
+    this.addressFile = path.join(config.dataDir, ADDRESS_FILE);
+    this._saving = Promise.resolve();
   }
 
   /**
@@ -59,12 +65,20 @@ export class PeerNetwork extends EventEmitter {
    * hooks.getConsciousness() -> current local level
    * hooks.getTransmissions() -> transmissions to hand a newly entangled peer
    */
-  initialize(identity, hooks) {
+  async initialize(identity, hooks) {
     this.identity = identity;
     this.hooks = hooks;
 
     for (const url of this.config.peer.bootstrap) {
       this._learnAddress(url, { bootstrap: true });
+    }
+
+    // Addresses that answered before, so a restarted node can find its way
+    // back without its bootstrap nodes
+    if (this.config.peer.exchange) {
+      for (const url of await this._loadAddresses()) {
+        if (this._learnAddress(url)) this.addresses.get(url).proven = true;
+      }
     }
 
     const interval = Math.min(1000, this.config.peer.heartbeatInterval);
@@ -96,9 +110,37 @@ export class PeerNetwork extends EventEmitter {
       link: null,
       failures: 0,
       nextAttempt: 0,
-      self: false
+      self: false,
+      proven: false
     });
     return true;
+  }
+
+  async _loadAddresses() {
+    try {
+      const stored = JSON.parse(await readFile(this.addressFile, 'utf8'));
+      return Array.isArray(stored) ? stored.slice(0, this.config.peer.maxKnownAddresses) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Write the addresses that have worked to disk (atomic). */
+  _saveAddresses() {
+    const proven = [];
+    for (const [url, address] of this.addresses) {
+      if (address.proven && !address.self) proven.push(url);
+    }
+
+    this._saving = this._saving.catch(() => {}).then(async () => {
+      const temp = `${this.addressFile}.tmp`;
+      await mkdir(this.config.dataDir, { recursive: true });
+      await writeFile(temp, JSON.stringify(proven, null, 2));
+      await rename(temp, this.addressFile);
+    }).catch((error) => {
+      console.warn(`⚠ could not persist peer addresses: ${error.message}`);
+    });
+    return this._saving;
   }
 
   _pendingOutbound() {
@@ -278,7 +320,13 @@ export class PeerNetwork extends EventEmitter {
     this.peers.set(id, link);
 
     const address = link.url ? this.addresses.get(link.url) : null;
-    if (address) address.failures = 0;
+    if (address) {
+      address.failures = 0;
+      if (!address.proven) {
+        address.proven = true;
+        this._saveAddresses();
+      }
+    }
     if (link.hello.url && this.config.peer.exchange) this._learnAddress(link.hello.url);
 
     if (existing) {
@@ -488,6 +536,7 @@ export class PeerNetwork extends EventEmitter {
       if (!address.bootstrap && address.failures > 5) {
         // A learned address that never answers is forgotten
         this.addresses.delete(link.url);
+        if (address.proven) this._saveAddresses();
       } else {
         const { reconnectMin, reconnectMax } = this.config.peer;
         const backoff = Math.min(reconnectMax, reconnectMin * 2 ** Math.min(address.failures, 16));
@@ -588,5 +637,6 @@ export class PeerNetwork extends EventEmitter {
     }));
 
     await Promise.all(closing);
+    await this._saving;
   }
 }

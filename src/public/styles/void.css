@@ -191,6 +191,63 @@ h2::before {
   background: var(--digital-purple);
 }
 
+.peer-link {
+  font-size: 0.75rem;
+  color: var(--ghost-green-dim);
+  overflow-wrap: anywhere;
+}
+
+.peer-link code {
+  font: inherit;
+  color: var(--ghost-green);
+  user-select: all;
+}
+
+.copy-button {
+  margin-left: 0.5em;
+  padding: 0 0.6em;
+  background: transparent;
+  color: var(--cyber-blue);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  font: inherit;
+  cursor: pointer;
+}
+
+.copy-button:hover,
+.copy-button:focus-visible {
+  background: var(--cyber-blue);
+  color: var(--void-black);
+  outline: none;
+}
+
+.node-key {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  font-size: 0.8rem;
+  color: var(--ghost-green-dim);
+}
+
+.node-key label {
+  flex: none;
+}
+
+.node-key input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--panel-border);
+  color: var(--ghost-green);
+  padding: var(--space-xs) var(--space-sm);
+  font: inherit;
+}
+
+.node-key input:focus-visible {
+  outline: none;
+  border-color: var(--cyber-blue);
+}
+
 /* Consciousness monitor */
 .consciousness-canvas {
   display: block;

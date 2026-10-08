@@ -217,9 +217,7 @@ body {
   }
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --void-black: #ffffff;
-    --ghost-green: #003300;
-  }
+/* the void is always dark */
+:root {
+  color-scheme: dark;
 }
