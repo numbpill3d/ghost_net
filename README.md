@@ -7,6 +7,8 @@ to the nodes it is connected to, and forgets it after ten days.
 
 Landing page: <https://numbpill3d.github.io/ghost_net/>
 
+![a ghost_net node's interface: identity, consciousness chart, one peer and two transmissions](docs/assets/interface.png)
+
 ## Quickstart
 
 Needs Node.js 20.12 or newer.
@@ -30,6 +32,18 @@ PORT=3001 DATA_DIR=_void2 BOOTSTRAP_NODES=ws://localhost:3000/peer npm start
 Open <http://localhost:3001> next to the first tab. Each interface now lists
 the other node under "quantum entanglement network", and a transmission sent
 from either one appears on both.
+
+Or start three at once:
+
+```bash
+npm run demo
+```
+
+That runs nodes A, B and C on ports 3000 to 3002 in a chain. A and C are not
+connected to each other, so what you send on one reaches the other only
+because B relays it. Their data lives in `_void_demo/`.
+
+The address to give another node is shown in the interface as "peer link".
 
 ## What you are looking at
 
@@ -78,8 +92,10 @@ The readings are computed from what the node is actually doing.
 - **Peer exchange.** A node that sets `PUBLIC_URL` tells its peers where it
   can be reached, and peers pass those addresses on, so nodes find each other
   beyond their bootstrap list. Turn it off with `PEER_EXCHANGE=false`.
-- **Reconnecting.** Lost bootstrap connections are retried with a growing
-  delay, up to a minute.
+- **Reconnecting.** Lost connections are retried with a growing delay, up to
+  a minute. A node also remembers the addresses that answered (in
+  `peers.json` in its data directory) and dials them again after a restart,
+  so it can rejoin even if its bootstrap nodes are gone.
 
 ## Configuration
 
@@ -101,6 +117,7 @@ Everything is optional.
 | `MAX_STORED_TRANSMISSIONS` | `1000` | When full, the oldest are dropped first. |
 | `RATE_LIMIT_MAX` | `300` | API requests per client per minute. |
 | `TRANSMIT_LIMIT_MAX` | `20` | Transmissions per client per minute. |
+| `TRANSMIT_KEY` | none | When set, posting through this node needs the key. Reading and relaying stay open. |
 | `TRUST_PROXY` | off | Set to `1` behind a reverse proxy so rate limits see real client addresses. |
 
 Use the same `TRANSMISSION_LIFETIME` on every node of a network. A node
@@ -114,7 +131,7 @@ with a shorter one lets transmissions go sooner than its peers do.
 | `GET /api/status` | All current readings, peer and transmission counts, uptime. |
 | `GET /api/peers` | Connected peers with latency, consciousness and resonance. |
 | `GET /api/transmissions` | Held transmissions, newest first, and the lifetime. |
-| `POST /api/transmit` | Body `{"content": "text"}`. Signs and sends a transmission; returns it with status 201. |
+| `POST /api/transmit` | Body `{"content": "text"}`. Signs and sends a transmission; returns it with status 201. On a locked node, send `Authorization: Bearer <TRANSMIT_KEY>`. |
 | `GET /health` | `{"status": "alive"}`. |
 | `WS /ws` | Live feed for the interface: `handshake`, then `sync`, `transmission` and `decayed` messages. |
 | `WS /peer` | Node-to-node link. |
@@ -130,8 +147,9 @@ curl -X POST localhost:3000/api/transmit \
 - Transmissions are public. Every node that receives one can read it, and
   nothing is encrypted beyond whatever TLS you put in front of a node.
 - Signatures prove which **node** sent a transmission. Anyone who can open a
-  node's interface can post through it, so keep a node on `127.0.0.1` or
-  behind your own access control unless you want it open.
+  node's interface can post through it. To prevent that, set `TRANSMIT_KEY`
+  (the interface then asks for it and remembers it in that browser), or keep
+  the node on `127.0.0.1`. Send the key over HTTPS only.
 - This is not an anonymity network. Peers see each other's IP addresses.
 - A node with peer exchange on will try to connect to addresses its peers
   give it. Turn it off on a machine where that matters.
@@ -147,6 +165,7 @@ curl -X POST localhost:3000/api/transmit \
 npm test        # unit and multi-node tests (node --test)
 npm run e2e     # drives the interface in headless Chromium; needs `chromium` on PATH
 npm run dev     # restart on change
+npm run demo    # three local nodes in a chain
 ```
 
 ```
@@ -161,6 +180,7 @@ ghost_net/
 │   │   ├── transmission.js # create, verify, hold, decay
 │   │   └── peer.js         # dialing, handshake, heartbeat, gossip
 │   └── public/             # the node interface
+├── scripts/demo.js         # three local nodes in a chain
 ├── docs/                   # landing page (GitHub Pages)
 └── test/
 ```

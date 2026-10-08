@@ -6,6 +6,23 @@
 
 const SIGIL_GLYPHS = ['⚡', '□', '▽', '○', '╳', '△', '╱', '╲', '☯', '✧'];
 const HISTORY_LENGTH = 120;
+const BASE_TITLE = document.title;
+const KEY_STORAGE = 'ghost_net:node-key';
+
+// Storage can be unavailable (private windows, blocked site data)
+const remember = (key, value) => {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch { /* the key simply is not remembered */ }
+};
+const recall = (key) => {
+  try {
+    return localStorage.getItem(key) || '';
+  } catch {
+    return '';
+  }
+};
 
 const $ = (id) => document.getElementById(id);
 const clamp01 = (value) => Math.min(1, Math.max(0, Number(value) || 0));
@@ -201,6 +218,9 @@ class ConsciousnessMatrix {
     this.reconnectDelay = 1000;
     this.sending = false;
 
+    // Transmissions that arrived while the tab was in the background
+    this.unseen = 0;
+
     this.field = new QuantumField($('quantumField'));
     this.chart = $('consciousnessCanvas');
 
@@ -274,6 +294,12 @@ class ConsciousnessMatrix {
     $('quantumSignature').textContent = `signing as ${shortId(this.identity.id)} · ed25519`;
     $('transmissionInput').maxLength = this.maxLength;
     this.updateCharCount();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    $('peerLink').textContent = `${protocol}//${window.location.host}/peer`;
+
+    $('nodeKeyRow').hidden = !this.identity.locked;
+    if (this.identity.locked && !$('nodeKey').value) $('nodeKey').value = recall(KEY_STORAGE);
 
     // The node is the source of truth: redraw the stream from what it holds
     for (const id of [...this.transmissions.keys()]) this.dissolve(id);
@@ -454,9 +480,13 @@ class ConsciousnessMatrix {
     $('transmitButton').disabled = true;
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      const key = this.identity?.locked ? $('nodeKey').value : '';
+      if (key) headers.Authorization = `Bearer ${key}`;
+
       const response = await fetch('/api/transmit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ content })
       });
       const body = await response.json().catch(() => ({}));
@@ -466,6 +496,7 @@ class ConsciousnessMatrix {
         throw new Error(`${body.error || `transmission failed (${response.status})`}${wait ? '.' + wait : ''}`);
       }
 
+      if (key) remember(KEY_STORAGE, key);
       input.value = '';
       this.updateCharCount();
       this.receiveTransmission(body.transmission, true);
@@ -513,7 +544,13 @@ class ConsciousnessMatrix {
     this.insertInOrder(transmission, element);
     this.applyQuantumDecay();
 
-    if (live) this.field.ripple();
+    if (live) {
+      this.field.ripple();
+      if (document.hidden && !own) {
+        this.unseen++;
+        document.title = `(${this.unseen}) ${BASE_TITLE}`;
+      }
+    }
   }
 
   /** Newest first, whatever order transmissions arrive in. */
@@ -606,6 +643,27 @@ class ConsciousnessMatrix {
     });
 
     window.addEventListener('resize', () => this.renderConsciousnessChart());
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      this.unseen = 0;
+      document.title = BASE_TITLE;
+    });
+
+    const copy = $('copyPeerLink');
+    if (!navigator.clipboard) {
+      copy.hidden = true; // only available on https and localhost
+    } else {
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText($('peerLink').textContent);
+          copy.textContent = 'copied';
+        } catch {
+          copy.textContent = 'copy failed';
+        }
+        setTimeout(() => { copy.textContent = 'copy'; }, 1500);
+      });
+    }
   }
 }
 

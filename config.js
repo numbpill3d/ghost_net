@@ -126,6 +126,8 @@ export function createConfig(env = process.env) {
     },
 
     security: {
+      // When set, posting needs this key; reading stays open
+      transmitKey: env.TRANSMIT_KEY || null,
       trustProxy: trustProxy(env.TRUST_PROXY),
       maxBrowsers: num(env.MAX_BROWSERS, 200, { min: 1 }),
       rateLimit: {

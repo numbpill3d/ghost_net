@@ -4,7 +4,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'node:http';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,6 +85,19 @@ export class QuantumServer {
       handler: (req, res) => limited(res, general.window)
     }));
 
+    // Optional lock: with TRANSMIT_KEY set, only holders of the key can post
+    const digest = (value) => createHash('sha256').update(String(value)).digest();
+    const expected = this.config.security.transmitKey
+      ? digest(this.config.security.transmitKey)
+      : null;
+
+    this.requireTransmitKey = (req, res, next) => {
+      if (!expected) return next();
+      const offered = /^Bearer (.+)$/.exec(req.get('authorization') || '')?.[1] ?? '';
+      if (timingSafeEqual(digest(offered), expected)) return next();
+      res.status(401).json({ error: 'This node is locked: a valid node key is needed to transmit' });
+    };
+
     this.transmitLimiter = rateLimit({
       windowMs: transmitLimit.window,
       limit: transmitLimit.max,
@@ -141,7 +154,7 @@ export class QuantumServer {
       });
     });
 
-    app.post('/api/transmit', this.transmitLimiter, (req, res, next) => {
+    app.post('/api/transmit', this.transmitLimiter, this.requireTransmitKey, (req, res, next) => {
       try {
         const transmission = ghostNet.transmit({ content: req.body?.content });
         res.status(201).json({ transmission, timestamp: Date.now() });

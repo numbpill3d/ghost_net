@@ -1,6 +1,6 @@
 {
   "name": "ghost_net",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Distributed consciousness network for digital void exploration",
   "type": "module",
   "main": "src/server.js",
@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "demo": "node scripts/demo.js",
     "test": "node --test test/*.test.js",
     "e2e": "node test/e2e.mjs"
   },
@@ -29,5 +30,13 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "ws": "^8.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/numbpill3d/ghost_net.git"
+  },
+  "homepage": "https://numbpill3d.github.io/ghost_net/",
+  "bugs": {
+    "url": "https://github.com/numbpill3d/ghost_net/issues"
   }
 }
