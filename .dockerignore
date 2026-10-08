@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+docs
+test
+scripts
+_void*
+.env
+.env.*
+*.md
+fly.toml
