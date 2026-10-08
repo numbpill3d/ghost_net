@@ -45,6 +45,20 @@ because B relays it. Their data lives in `_void_demo/`.
 
 The address to give another node is shown in the interface as "peer link".
 
+### Join the public network
+
+There is a public node at <https://ghost-net.fly.dev>. Point yours at it and
+you are no longer alone:
+
+```bash
+BOOTSTRAP_NODES=wss://ghost-net.fly.dev/peer npm start
+```
+
+Your node pulls down what the public node is holding, and anything you send
+travels on through it to everyone else connected. Open its address in a
+browser to read the network without running anything. Posting from that page
+is locked with a node key; posts from your own node are signed by your node.
+
 ## What you are looking at
 
 | On screen | What it is |
@@ -159,6 +173,22 @@ curl -X POST localhost:3000/api/transmit \
 - The interface shows transmissions as plain text. It never interprets them
   as HTML.
 
+## Hosting a public node
+
+The `Dockerfile` builds a node that keeps its keypair and transmissions in
+`/data`; mount a volume there or the node gets a new identity on every start.
+
+```bash
+docker build -t ghost_net .
+docker run -p 3000:3000 -v ghost_data:/data \
+  -e PUBLIC_URL=wss://your.host/peer -e TRANSMIT_KEY=change-me ghost_net
+```
+
+Put it behind TLS and set `TRUST_PROXY=1` so rate limits see the real client
+address. `fly.toml` is the configuration of the public node above, deployed
+to Fly.io with `fly deploy --ha=false`; it must stay a single machine that
+never sleeps, since a stopped node holds no links.
+
 ## Development
 
 ```bash
@@ -181,6 +211,7 @@ ghost_net/
 │   │   └── peer.js         # dialing, handshake, heartbeat, gossip
 │   └── public/             # the node interface
 ├── scripts/demo.js         # three local nodes in a chain
+├── Dockerfile, fly.toml    # container image and the public node's deployment
 ├── docs/                   # landing page (GitHub Pages)
 └── test/
 ```
