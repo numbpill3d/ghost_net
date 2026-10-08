@@ -1,410 +1,264 @@
- 
+import { EventEmitter } from 'node:events';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { nodeIdFromPublicKey, sha256, verifySignature } from './identity.js';
 
-import { createHash, createHmac, randomBytes } from 'crypto';
-import { Buffer } from 'buffer';
-import { EventEmitter } from 'events';
-import { marked } from 'marked';
-import { gzip, ungzip } from 'zlib';
-import { promisify } from 'util';
+const STORE_FILE = 'transmissions.json';
+const HEX_64 = /^[0-9a-f]{64}$/;
+const HEX_32 = /^[0-9a-f]{32}$/;
 
-const gzipAsync = promisify(gzip);
-const ungzipAsync = promisify(ungzip);
+// Control characters other than tab and newline
+const CONTROL_CHARS = /[\u0000-\u0008\u000B-\u001F\u007F]/g;
+
+/**
+ * The exact bytes a transmission's id and signature are computed over.
+ */
+export const canonicalTransmission = (t) =>
+  JSON.stringify([t.author, t.publicKey, t.content, t.timestamp, t.consciousness]);
+
+/**
+ * Check a transmission from anywhere (a peer, the disk) before trusting it.
+ * Returns { ok: true, transmission } with a clean copy, or { ok: false, reason }.
+ */
+export function verifyTransmission(candidate, config, now = Date.now()) {
+  const fail = (reason) => ({ ok: false, reason });
+
+  if (!candidate || typeof candidate !== 'object') return fail('malformed');
+
+  const { id, author, publicKey, content, timestamp, consciousness, signature } = candidate;
+
+  if (typeof id !== 'string' || !HEX_64.test(id)) return fail('malformed');
+  if (typeof author !== 'string' || !HEX_32.test(author)) return fail('malformed');
+  if (typeof publicKey !== 'string' || publicKey.length > 128) return fail('malformed');
+  if (typeof signature !== 'string' || signature.length > 128) return fail('malformed');
+  if (!Number.isSafeInteger(timestamp) || timestamp <= 0) return fail('malformed');
+  if (typeof consciousness !== 'number' || !(consciousness >= 0 && consciousness <= 1)) return fail('malformed');
+  if (typeof content !== 'string' || content.length === 0) return fail('malformed');
+  if (content.length > config.transmission.maxLength) return fail('too_long');
+
+  if (timestamp > now + config.transmission.maxFutureSkew) return fail('from_the_future');
+  if (now - timestamp >= config.transmission.lifetime) return fail('expired');
+
+  const transmission = { id, author, publicKey, content, timestamp, consciousness, signature };
+  const canonical = canonicalTransmission(transmission);
+
+  if (nodeIdFromPublicKey(publicKey) !== author) return fail('identity_mismatch');
+  if (sha256(canonical) !== id) return fail('id_mismatch');
+  if (!verifySignature(canonical, signature, publicKey)) return fail('bad_signature');
+
+  return { ok: true, transmission };
+}
 
 /**
  * TransmissionHandler
- * Manages consciousness signal propagation through the quantum void
+ * Creates, verifies, holds and forgets the signals passing through this node.
  */
 export class TransmissionHandler extends EventEmitter {
-  constructor(config) {
+  constructor(config, { now = Date.now } = {}) {
     super();
-    
-    // Core configuration
+
     this.config = config;
-    
-    // Transmission buffers with sophisticated memory management
-    this.transmissionBuffers = {
-      pending: new Map(),    // Awaiting quantum verification
-      verified: new Map(),   // Verified transmissions
-      archived: new Map(),   // Historical transmissions
-      quantum: new WeakMap() // Quantum signatures
-    };
+    this.now = now;
+    this.file = path.join(config.dataDir, STORE_FILE);
 
-    // Performance metrics
+    // Transmissions this node is currently holding, by id
+    this.transmissions = new Map();
+
+    // Ids that were already handled, so a signal dropped for space is not
+    // welcomed back as new
+    this.seen = new Set();
+    this.maxSeen = Math.max(5000, config.transmission.maxStored * 5);
+
     this.metrics = {
-      totalTransmissions: 0,
-      averageLatency: 0,
-      compressionRatio: 0,
-      quantumIntegrity: 1.0,
-      signalStrength: new Float32Array(100)
+      created: 0,
+      received: 0,
+      rejected: 0,
+      decayed: 0
     };
 
-    // Initialize quantum cipher for transmission encryption
-    this.quantumCipher = this._initializeQuantumCipher();
+    this._saveTimer = null;
+    this._saving = Promise.resolve();
   }
 
   /**
-   * Initialize quantum transmission system
+   * Restore whatever survived on disk
    */
   async initialize(identity) {
     this.identity = identity;
-    await this._initializeTransmissionBuffers();
-    this._startQuantumMaintenanceLoop();
-  }
+    await mkdir(this.config.dataDir, { recursive: true });
 
-  /**
-   * Initialize quantum cipher for transmission encryption
-   */
-  _initializeQuantumCipher() {
-    return {
-      // Quantum key derivation
-      deriveKey: (consciousness) => {
-        const buffer = Buffer.alloc(32);
-        const consciousnessBytes = Buffer.from(consciousness.toString());
-        
-        // XOR consciousness with random quantum noise
-        for (let i = 0; i < buffer.length; i++) {
-          buffer[i] = consciousnessBytes[i % consciousnessBytes.length] ^ 
-                     randomBytes(1)[0];
-        }
-        
-        return createHash('sha256').update(buffer).digest();
-      },
-
-      // Quantum encryption
-      encrypt: (data, key) => {
-        const iv = randomBytes(16);
-        const cipher = createHmac('sha512', key);
-        
-        cipher.update(iv);
-        cipher.update(data);
-        
-        return {
-          data: cipher.digest(),
-          iv: iv.toString('hex')
-        };
-      },
-
-      // Quantum decryption
-      decrypt: (encrypted, key, iv) => {
-        const decipher = createHmac('sha512', key);
-        decipher.update(Buffer.from(iv, 'hex'));
-        decipher.update(encrypted);
-        
-        return decipher.digest();
-      }
-    };
-  }
-
-  /**
-   * Create new consciousness transmission
-   */
-  async createTransmission(content, identity, consciousness) {
+    let stored = [];
     try {
-      // Generate quantum signature
-      const signature = this._generateQuantumSignature(content, consciousness);
-      
-      // Compress transmission content
-      const compressed = await this._compressTransmission(content);
-      
-      // Create transmission packet
-      const transmission = {
-        id: this._generateTransmissionId(),
-        timestamp: Date.now(),
-        consciousness: consciousness.level,
-        resonance: consciousness.resonance,
-        content: compressed,
-        signature: signature,
-        metadata: {
-          author: identity.id,
-          spiritual_alignment: identity.spiritualAlignment,
-          harmonic_frequency: identity.harmonicFrequency,
-          quantum_state: this._captureQuantumState()
-        }
-      };
-
-      // Encrypt transmission
-      const encrypted = await this._encryptTransmission(transmission);
-      
-      // Store in pending buffer
-      this.transmissionBuffers.pending.set(transmission.id, encrypted);
-      
-      // Update metrics
-      this._updateMetrics('transmission_created', transmission);
-      
-      // Emit creation event
-      this.emit('transmission:created', {
-        id: transmission.id,
-        timestamp: transmission.timestamp
-      });
-
-      return transmission;
-      
+      stored = JSON.parse(await readFile(this.file, 'utf8'));
     } catch (error) {
-      this.emit('transmission:error', {
-        type: 'creation_failed',
-        error: error.message
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Process incoming transmission
-   */
-  async processTransmission(transmission, peer) {
-    try {
-      // Verify quantum signature
-      if (!this._verifyQuantumSignature(transmission)) {
-        throw new Error('Invalid quantum signature');
+      if (error.code !== 'ENOENT') {
+        console.warn(`⚠ could not read ${this.file}, starting empty: ${error.message}`);
       }
-
-      // Decrypt transmission
-      const decrypted = await this._decryptTransmission(transmission);
-      
-      // Decompress content
-      decrypted.content = await this._decompressTransmission(decrypted.content);
-      
-      // Calculate consciousness resonance
-      const resonance = this._calculateResonance(
-        this.identity.consciousnessLevel,
-        decrypted.consciousness
-      );
-
-      // Store if resonance is sufficient
-      if (resonance > this.config.consciousness.resonanceThreshold) {
-        await this._storeTransmission(decrypted);
-        
-        // Emit processing success
-        this.emit('transmission:processed', {
-          id: transmission.id,
-          resonance: resonance,
-          peer: peer.id
-        });
-      }
-
-      return decrypted;
-      
-    } catch (error) {
-      this.emit('transmission:error', {
-        type: 'processing_failed',
-        error: error.message
-      });
-      throw error;
     }
+
+    const now = this.now();
+    for (const candidate of Array.isArray(stored) ? stored : []) {
+      const result = verifyTransmission(candidate, this.config, now);
+      if (result.ok) this._hold(result.transmission);
+    }
+    this._enforceCapacity();
   }
 
   /**
-   * Compress transmission content using quantum compression
+   * Sign a new transmission from this node and start holding it
    */
-  async _compressTransmission(content) {
-    // Convert content to markdown if needed
-    const markdown = typeof content === 'string' 
-      ? marked(content)
-      : content;
-    
-    // Compress using gzip
-    const compressed = await gzipAsync(Buffer.from(markdown));
-    
-    // Update compression metrics
-    this.metrics.compressionRatio = 
-      compressed.length / Buffer.from(markdown).length;
-    
-    return compressed;
-  }
+  create(content, consciousness) {
+    const text = this.normalizeContent(content);
 
-  /**
-   * Decompress transmission content
-   */
-  async _decompressTransmission(compressed) {
-    // Decompress gzipped content
-    const decompressed = await ungzipAsync(compressed);
-    return decompressed.toString();
-  }
-
-  /**
-   * Encrypt transmission using quantum encryption
-   */
-  async _encryptTransmission(transmission) {
-    // Derive quantum key from consciousness level
-    const key = this.quantumCipher.deriveKey(transmission.consciousness);
-    
-    // Encrypt transmission data
-    const encrypted = this.quantumCipher.encrypt(
-      Buffer.from(JSON.stringify(transmission)),
-      key
-    );
-    
-    return {
-      data: encrypted.data,
-      iv: encrypted.iv,
-      consciousness: transmission.consciousness
+    const transmission = {
+      author: this.identity.id,
+      publicKey: this.identity.publicKey,
+      content: text,
+      timestamp: this.now(),
+      consciousness: Math.round(Math.min(1, Math.max(0, consciousness)) * 1000) / 1000
     };
+
+    const canonical = canonicalTransmission(transmission);
+    transmission.id = sha256(canonical);
+    transmission.signature = this.identity.sign(canonical);
+
+    this._hold(transmission);
+    this._enforceCapacity();
+    this._scheduleSave();
+    this.metrics.created++;
+
+    return transmission;
   }
 
   /**
-   * Decrypt transmission using quantum decryption
+   * Take in a transmission that arrived from another node.
+   * Returns { status: 'new' | 'duplicate' | 'rejected', reason?, transmission? }.
    */
-  async _decryptTransmission(encrypted) {
-    // Derive quantum key from consciousness level
-    const key = this.quantumCipher.deriveKey(encrypted.consciousness);
-    
-    // Decrypt transmission data
-    const decrypted = this.quantumCipher.decrypt(
-      encrypted.data,
-      key,
-      encrypted.iv
-    );
-    
-    return JSON.parse(decrypted.toString());
+  accept(candidate) {
+    if (candidate && typeof candidate.id === 'string' && this.seen.has(candidate.id)) {
+      return { status: 'duplicate' };
+    }
+
+    const result = verifyTransmission(candidate, this.config, this.now());
+    if (!result.ok) {
+      this.metrics.rejected++;
+      return { status: 'rejected', reason: result.reason };
+    }
+
+    this._hold(result.transmission);
+    this._enforceCapacity();
+    this._scheduleSave();
+    this.metrics.received++;
+
+    return { status: 'new', transmission: result.transmission };
   }
 
   /**
-   * Generate unique transmission ID using quantum entropy
+   * Clean up user input. Throws an Error with a `status` for the HTTP layer.
    */
-  _generateTransmissionId() {
-    const entropy = randomBytes(32);
-    const timestamp = Buffer.from(Date.now().toString());
-    
-    return createHash('sha256')
-      .update(Buffer.concat([entropy, timestamp]))
-      .digest('hex');
+  normalizeContent(content) {
+    const reject = (message) => Object.assign(new Error(message), { status: 400 });
+
+    if (typeof content !== 'string') throw reject('A transmission needs text content');
+
+    const text = content.replace(/\r\n?/g, '\n').replace(CONTROL_CHARS, '').trim();
+    if (!text) throw reject('The void does not accept empty transmissions');
+    if (text.length > this.config.transmission.maxLength) {
+      throw reject(`Transmission exceeds ${this.config.transmission.maxLength} characters`);
+    }
+    return text;
+  }
+
+  /** How much of a transmission is left: 1 when new, 0 when fully decayed. */
+  vitality(transmission, at = this.now()) {
+    const age = at - transmission.timestamp;
+    return Math.min(1, Math.max(0, 1 - age / this.config.transmission.lifetime));
+  }
+
+  /** Held transmissions, newest first. */
+  list() {
+    return [...this.transmissions.values()].sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  has(id) {
+    return this.transmissions.has(id);
+  }
+
+  get size() {
+    return this.transmissions.size;
   }
 
   /**
-   * Generate quantum signature for transmission verification
+   * Let fully decayed transmissions go. Returns the ids that dissolved.
    */
-  _generateQuantumSignature(content, consciousness) {
-    const signatureInput = Buffer.concat([
-      Buffer.from(content),
-      Buffer.from(consciousness.level.toString()),
-      Buffer.from(consciousness.resonance.toString()),
-      randomBytes(16) // Add quantum noise
-    ]);
-    
-    return createHmac('sha512', this.identity.id)
-      .update(signatureInput)
-      .digest('hex');
-  }
+  prune() {
+    const now = this.now();
+    const dissolved = [];
 
-  /**
-   * Verify quantum signature of transmission
-   */
-  _verifyQuantumSignature(transmission) {
-    const reconstructedSignature = this._generateQuantumSignature(
-      transmission.content,
-      transmission.consciousness
-    );
-    
-    return transmission.signature === reconstructedSignature;
-  }
-
-  /**
-   * Calculate consciousness resonance between transmissions
-   */
-  _calculateResonance(local, remote) {
-    // Base resonance calculation
-    const baseResonance = 1 - Math.abs(local - remote);
-    
-    // Apply quantum harmonic factors
-    const harmonicFactor = Math.sin(
-      this.config.consciousness.baseFrequency * Date.now()
-    ) * 0.2 + 0.8;
-    
-    // Add temporal decay
-    const temporalFactor = Math.exp(
-      -(Date.now() - this.identity.birthTimestamp) / 
-      (1000 * 60 * 60 * 24 * 30)
-    );
-    
-    return (baseResonance * harmonicFactor * temporalFactor + 1) / 2;
-  }
-
-  /**
-   * Capture current quantum state for transmission context
-   */
-  _captureQuantumState() {
-    return {
-      timestamp: Date.now(),
-      consciousness: this.identity.consciousnessLevel,
-      resonance: this.identity.voidResonance,
-      harmonics: {
-        base: this.config.consciousness.baseFrequency,
-        current: this.identity.harmonicFrequency,
-        phase: Math.sin(Date.now() * this.identity.harmonicFrequency)
-      }
-    };
-  }
-
-  /**
-   * Start quantum maintenance loop for buffer management
-   */
-  _startQuantumMaintenanceLoop() {
-    setInterval(() => {
-      this._archiveOldTransmissions();
-      this._updateMetrics('maintenance_cycle');
-    }, this.config.quantum.maintenanceInterval);
-  }
-
-  /**
-   * Archive old transmissions to prevent memory overload
-   */
-  _archiveOldTransmissions() {
-    const now = Date.now();
-    const archiveThreshold = now - this.config.quantum.archiveAge;
-    
-    // Move old transmissions to archive
-    for (const [id, transmission] of this.transmissionBuffers.verified) {
-      if (transmission.timestamp < archiveThreshold) {
-        this.transmissionBuffers.archived.set(id, transmission);
-        this.transmissionBuffers.verified.delete(id);
+    for (const [id, transmission] of this.transmissions) {
+      if (now - transmission.timestamp >= this.config.transmission.lifetime) {
+        this.transmissions.delete(id);
+        dissolved.push(id);
       }
     }
-    
-    // Limit archive size
-    while (this.transmissionBuffers.archived.size > this.config.quantum.maxArchiveSize) {
-      const oldestId = Array.from(this.transmissionBuffers.archived.keys())[0];
-      this.transmissionBuffers.archived.delete(oldestId);
+
+    if (dissolved.length > 0) {
+      this.metrics.decayed += dissolved.length;
+      this._scheduleSave();
+      this.emit('transmission:decayed', dissolved);
+    }
+    return dissolved;
+  }
+
+  _hold(transmission) {
+    this.transmissions.set(transmission.id, transmission);
+    this.seen.add(transmission.id);
+
+    if (this.seen.size > this.maxSeen) {
+      for (const id of this.seen) {
+        if (this.seen.size <= this.maxSeen) break;
+        if (!this.transmissions.has(id)) this.seen.delete(id);
+      }
     }
   }
 
-  /**
-   * Update transmission metrics
-   */
-  _updateMetrics(event, data = {}) {
-    switch (event) {
-      case 'transmission_created':
-        this.metrics.totalTransmissions++;
-        this.metrics.signalStrength.copyWithin(1, 0);
-        this.metrics.signalStrength[0] = data.consciousness;
-        break;
-      
-      case 'maintenance_cycle':
-        // Calculate average latency
-        const latencies = Array.from(this.transmissionBuffers.verified.values())
-          .map(t => Date.now() - t.timestamp);
-        
-        this.metrics.averageLatency = 
-          latencies.reduce((a, b) => a + b, 0) / latencies.length || 0;
-        
-        // Calculate quantum integrity
-        this.metrics.quantumIntegrity = 
-          this._calculateQuantumIntegrity();
-        break;
-    }
+  /** When over capacity the oldest signals are released first. */
+  _enforceCapacity() {
+    const excess = this.transmissions.size - this.config.transmission.maxStored;
+    if (excess <= 0) return;
+
+    const oldest = [...this.transmissions.values()]
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(0, excess);
+
+    for (const transmission of oldest) this.transmissions.delete(transmission.id);
+    this.emit('transmission:decayed', oldest.map((t) => t.id));
+  }
+
+  _scheduleSave() {
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      this.flush().catch((error) => console.warn(`⚠ could not persist transmissions: ${error.message}`));
+    }, 500);
+    this._saveTimer.unref?.();
   }
 
   /**
-   * Calculate quantum integrity of the transmission system
+   * Write held transmissions to disk now (atomic: temp file, then rename)
    */
-  _calculateQuantumIntegrity() {
-    const samples = this.metrics.signalStrength;
-    let integrity = 0;
-    
-    for (let i = 1; i < samples.length; i++) {
-      const delta = Math.abs(samples[i] - samples[i-1]);
-      integrity += Math.exp(-delta * 10);
+  flush() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
     }
-    
-    return integrity / (samples.length - 1);
+
+    this._saving = this._saving.catch(() => {}).then(async () => {
+      const temp = `${this.file}.tmp`;
+      await mkdir(this.config.dataDir, { recursive: true });
+      await writeFile(temp, JSON.stringify(this.list()));
+      await rename(temp, this.file);
+    });
+    return this._saving;
   }
 }

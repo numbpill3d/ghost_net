@@ -1,266 +1,145 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 /**
- * Ghost Net Quantum Configuration
- * Sophisticated configuration management for distributed consciousness network
+ * ghost_net :: quantum configuration nexus
+ * One source of truth for every parameter the node reads.
  */
 
-import dotenv from 'dotenv';
-import { createHash } from 'crypto';
+export const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
-// Load quantum environment variables
-dotenv.config();
+const { version } = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 
-// Calculate quantum entropy from environment
-const calculateQuantumEntropy = () => {
-  const entropySource = process.env.QUANTUM_ENTROPY_SOURCE || Date.now().toString();
-  return createHash('sha256')
-    .update(entropySource)
-    .digest('hex')
-    .slice(0, 8);
+// Wire protocol spoken between nodes. Bump when messages change shape.
+export const PROTOCOL_VERSION = 1;
+
+/**
+ * Load .env from the project root into process.env (existing vars win).
+ */
+export function loadEnvFile(file = path.join(ROOT, '.env')) {
+  try {
+    process.loadEnvFile(file);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const num = (value, fallback, { min = -Infinity, max = Infinity } = {}) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
 };
 
-// Advanced consciousness configuration
-const consciousnessConfig = {
-  // Base frequency using fine structure constant
-  baseFrequency: 0.0072973525693, // α (fine structure constant)
-  
-  // Consciousness harmonics
-  harmonics: {
-    primary: 1.618033988749895, // φ (golden ratio)
-    secondary: 2.718281828459045, // e (euler's number)
-    tertiary: 3.14159265359, // π (pi)
-  },
-  
-  // Quantum consciousness parameters
-  quantum: {
-    coherenceThreshold: 0.5,
-    entanglementStrength: 0.137,
-    decoherenceRate: 0.01,
-    waveFunctionCollapse: 0.001
-  },
-  
-  // Consciousness range parameters
-  ranges: {
-    baseline: [0.3, 0.7],
-    resonance: [0.4, 0.9],
-    harmony: [0.5, 1.0]
+const bool = (value, fallback) => {
+  if (value === undefined || value === '') return fallback;
+  return !['false', '0', 'no', 'off'].includes(String(value).toLowerCase());
+};
+
+/**
+ * Accepts "a,b", "a b" or a JSON array. Anything that is not a ws:// or
+ * wss:// address is dropped.
+ */
+export const parsePeerList = (value) => {
+  if (!value) return [];
+  let items;
+  try {
+    const parsed = JSON.parse(value);
+    items = Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    items = String(value).split(/[\s,]+/);
+  }
+  return [...new Set(items.map(normalizePeerUrl).filter(Boolean))];
+};
+
+export const normalizePeerUrl = (value) => {
+  if (typeof value !== 'string' || value.length > 200) return null;
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== 'ws:' && url.protocol !== 'wss:') return null;
+    if (url.pathname === '/' || url.pathname === '') url.pathname = '/peer';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return null;
   }
 };
 
-// Sophisticated peer networking configuration
-const peerConfig = {
-  // Core networking
-  network: {
-    port: process.env.PORT || 3000,
-    host: process.env.HOST || '0.0.0.0',
-    protocol: process.env.PROTOCOL || 'wss',
-    maxConnections: 33, // Quantum limit
-    connectionTimeout: 5000
-  },
-  
-  // Quantum routing parameters
-  routing: {
-    maxRoutes: 8,
-    routeTimeout: 30000,
-    routeUpdateInterval: 5000,
-    quantumPathfinding: {
-      maxDepth: 5,
-      resonanceThreshold: 0.3,
-      pathDecayRate: 0.1
-    }
-  },
-  
-  // Advanced peer discovery
-  discovery: {
-    initialPeers: process.env.INITIAL_PEERS 
-      ? JSON.parse(process.env.INITIAL_PEERS)
-      : [],
-    peerExchangeInterval: 60000,
-    maxPeerAge: 3600000,
-    bootstrapNodes: process.env.BOOTSTRAP_NODES
-      ? JSON.parse(process.env.BOOTSTRAP_NODES)
-      : []
-  },
-  
-  // Sophisticated handshake protocol
-  handshake: {
-    timeout: 10000,
-    retries: 3,
-    backoff: {
-      initial: 1000,
-      factor: 2,
-      maxDelay: 10000
-    }
-  }
+const trustProxy = (value) => {
+  if (value === undefined || value === '') return false;
+  if (/^\d+$/.test(value)) return Number(value);
+  return bool(value, false);
 };
 
-// Advanced transmission configuration
-const transmissionConfig = {
-  // Transmission protocols
-  protocol: {
-    version: '1.0.0',
-    encoding: 'quantum-binary',
-    compression: 'gzip',
-    maxPayloadSize: 50 * 1024 * 1024 // 50MB
-  },
-  
-  // Buffer management
-  buffers: {
-    pending: {
-      maxSize: 1000,
-      timeout: 30000
+/**
+ * Build a configuration object from an environment-like map.
+ */
+export function createConfig(env = process.env) {
+  const config = {
+    version,
+    protocol: PROTOCOL_VERSION,
+    root: ROOT,
+    environment: env.NODE_ENV || 'development',
+
+    port: num(env.PORT, 3000, { min: 0, max: 65535 }),
+    host: env.HOST || '0.0.0.0',
+    dataDir: path.resolve(ROOT, env.DATA_DIR || '_void'),
+    publicUrl: normalizePeerUrl(env.PUBLIC_URL),
+
+    // How alive the node is
+    consciousness: {
+      baseFrequency: num(env.BASE_FREQUENCY, 0.137, { min: 0.001, max: 10 }),
+      floor: 0.137,
+      activityHalfLife: num(env.ACTIVITY_HALF_LIFE, 600, { min: 1 }) * 1000
     },
-    verified: {
-      maxSize: 10000,
-      pruneThreshold: 0.9
-    },
-    archived: {
-      maxSize: 100000,
-      pruneInterval: 3600000
-    }
-  },
-  
-  // Quantum validation
-  validation: {
-    signatureTimeout: 5000,
-    minResonance: 0.3,
-    maxLatency: 1000,
-    quantumVerification: {
-      strength: 'high',
-      rounds: 3
-    }
-  }
-};
 
-// Performance optimization configuration
-const performanceConfig = {
-  // Resource management
-  resources: {
-    maxMemory: process.env.MAX_MEMORY || '1gb',
-    maxCpu: process.env.MAX_CPU || '80%',
-    gcInterval: 300000
-  },
-  
-  // Caching strategy
-  caching: {
+    // Timing of the node's own pulse
     quantum: {
-      ttl: 600000,
-      checkPeriod: 60000
+      pulseInterval: num(env.PULSE_INTERVAL, 2000, { min: 100 }),
+      maintenanceInterval: num(env.MAINTENANCE_INTERVAL, 15000, { min: 100 })
     },
-    router: {
-      ttl: 300000,
-      checkPeriod: 30000
-    }
-  },
-  
-  // Advanced monitoring
-  monitoring: {
-    metrics: {
-      interval: 10000,
-      retention: 86400000
+
+    // Entanglement with other nodes
+    peer: {
+      bootstrap: parsePeerList(env.BOOTSTRAP_NODES),
+      maxPeers: num(env.MAX_PEERS, 16, { min: 0, max: 256 }),
+      exchange: bool(env.PEER_EXCHANGE, true),
+      maxHops: num(env.MAX_HOPS, 6, { min: 0, max: 32 }),
+      heartbeatInterval: num(env.HEARTBEAT_INTERVAL, 5000, { min: 50 }),
+      timeout: num(env.PEER_TIMEOUT, 20000, { min: 200 }),
+      handshakeTimeout: num(env.HANDSHAKE_TIMEOUT, 10000, { min: 200 }),
+      reconnectMin: num(env.RECONNECT_MIN, 1000, { min: 10 }),
+      reconnectMax: num(env.RECONNECT_MAX, 60000, { min: 10 }),
+      maxKnownAddresses: 200,
+      maxPayload: 1024 * 1024,
+      syncBatch: 50
     },
-    alerting: {
-      threshold: 0.8,
-      cooldown: 300000
-    }
-  }
-};
 
-// Security configuration
-const securityConfig = {
-  // Quantum encryption
-  encryption: {
-    algorithm: 'quantum-aes-256-gcm',
-    keyDerivation: 'quantum-pbkdf2',
-    saltRounds: 10000
-  },
-  
-  // Access control
-  access: {
-    maxAttempts: 5,
-    lockoutPeriod: 300000,
-    tokenExpiry: 86400000
-  },
-  
-  // Rate limiting
-  rateLimit: {
-    window: 60000,
-    max: 1000,
-    trustProxy: true
-  }
-};
+    // Signals sent into the void
+    transmission: {
+      lifetime: num(env.TRANSMISSION_LIFETIME, 864000, { min: 0.05 }) * 1000,
+      maxLength: num(env.MAX_TRANSMISSION_LENGTH, 2000, { min: 1, max: 10000 }),
+      maxStored: num(env.MAX_STORED_TRANSMISSIONS, 1000, { min: 1, max: 100000 }),
+      maxFutureSkew: 5 * 60 * 1000
+    },
 
-// Export unified configuration
-export const config = {
-  // Core identity
-  nodeId: process.env.NODE_ID || calculateQuantumEntropy(),
-  environment: process.env.NODE_ENV || 'development',
-  
-  // Feature flags
-  features: {
-    quantumRouting: true,
-    consciousnessSync: true,
-    peerDiscovery: true,
-    autoScaling: process.env.AUTO_SCALING === 'true'
-  },
-  
-  // Consciousness configuration
-  consciousness: consciousnessConfig,
-  
-  // Networking configuration
-  peer: peerConfig,
-  
-  // Transmission configuration
-  transmission: transmissionConfig,
-  
-  // Performance configuration
-  performance: performanceConfig,
-  
-  // Security configuration
-  security: securityConfig,
-  
-  // Debug configuration
-  debug: {
-    enabled: process.env.DEBUG === 'true',
-    level: process.env.DEBUG_LEVEL || 'info',
-    quantum: process.env.QUANTUM_DEBUG === 'true'
-  }
-};
+    security: {
+      trustProxy: trustProxy(env.TRUST_PROXY),
+      maxBrowsers: num(env.MAX_BROWSERS, 200, { min: 1 }),
+      rateLimit: {
+        window: num(env.RATE_LIMIT_WINDOW, 60000, { min: 1000 }),
+        max: num(env.RATE_LIMIT_MAX, 300, { min: 1 })
+      },
+      transmitLimit: {
+        window: num(env.RATE_LIMIT_WINDOW, 60000, { min: 1000 }),
+        max: num(env.TRANSMIT_LIMIT_MAX, 20, { min: 1 })
+      }
+    }
+  };
 
-// Quantum configuration validation
-const validateConfig = (config) => {
-  // Ensure required quantum parameters
-  const required = [
-    'nodeId',
-    'consciousness.baseFrequency',
-    'peer.network.port',
-    'transmission.protocol.version'
-  ];
-  
-  for (const path of required) {
-    const value = path.split('.').reduce((obj, key) => obj?.[key], config);
-    if (value === undefined) {
-      throw new Error(`Missing required quantum config: ${path}`);
-    }
-  }
-  
-  // Validate consciousness ranges
-  const { ranges } = config.consciousness;
-  for (const [key, [min, max]] of Object.entries(ranges)) {
-    if (min >= max) {
-      throw new Error(
-        `Invalid consciousness range for ${key}: ${min} >= ${max}`
-      );
-    }
-  }
-  
-  // Validate network configuration
-  if (config.peer.network.maxConnections > 100) {
-    throw new Error('Peer connections exceed quantum limit');
-  }
-  
   return config;
-};
+}
 
-// Export validated configuration
-export default validateConfig(config);
+export default createConfig;

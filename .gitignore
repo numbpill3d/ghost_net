@@ -20,6 +20,7 @@ yarn-error.log*
 .env.production
 
 # Ghost net quantum artifacts
+_void/
 _transmissions/
 _quantum/
 _consciousness/

@@ -581,3 +581,10 @@
     display: none !important;
   }
 }
+
+.simulation-note {
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-bottom: 1.5rem;
+}
