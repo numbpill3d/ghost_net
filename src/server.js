@@ -1,102 +1,103 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { WebSocketServer } from 'ws';
-import { createServer } from 'http';
-import { createHash, randomBytes } from 'crypto';
-import { promisify } from 'util';
-import config from '../config.js';
+import { createServer } from 'node:http';
+import { randomBytes } from 'node:crypto';
+import { realpathSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createConfig, loadEnvFile } from '../config.js';
 import { GhostNet } from './lib/ghost_net.js';
 
-const sleep = promisify(setTimeout);
+const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 
 /**
  * Quantum Server for Ghost Net
- * Manages decentralized consciousness networking
+ * One HTTP server carrying three things: the interface and its API, the
+ * live feed to browsers (/ws) and the tunnel other nodes connect to (/peer).
  */
-class QuantumServer {
-  constructor() {
+export class QuantumServer {
+  constructor(config = createConfig(), options = {}) {
     this.config = config;
+    this.log = options.log ?? console.log;
+
     this.app = express();
     this.server = createServer(this.app);
-    this.ghostNet = new GhostNet(config);
+    this.ghostNet = new GhostNet(config, options);
 
-    // Advanced quantum state tracking
     this.metrics = {
       startTime: Date.now(),
       requests: 0,
-      errors: 0,
-      activeConnections: 0,
-      bandwidthUsage: 0,
-      quantumStability: 1.0,
-      lastGC: Date.now(),
-      memoryUsage: process.memoryUsage(),
-      cpuUsage: process.cpuUsage(),
-      consciousnessField: new Float32Array(1024),
-      entropyFactor: 0.01
+      errors: 0
     };
 
-    // Connection & network state
+    // Browsers watching this node
     this.connections = new Map();
-    this.pendingHandshakes = new Map();
-    this.quantumBuffers = {
-      transmissions: new Map(),
-      consciousness: new Float32Array(100),
-      resonance: new Float32Array(100),
-      peerSignatures: new Map()
-    };
   }
 
   async initialize() {
-    try {
-      console.log('🔷 Initializing Quantum Server...');
-
-      await this._initializeSecurity();
-      await this._initializeMiddleware();
-      await this._initializeRoutes();
-      await this._initializeWebSocket();
-      await this.ghostNet.initialize();
-      await this._startServer();
-      await this._initializeQuantumSync();
-
-      console.log('✅ Quantum Server initialization complete.');
-    } catch (error) {
-      console.error('❌ Quantum Server initialization failed:', error);
-      process.exit(1);
-    }
+    this._initializeSecurity();
+    this._initializeMiddleware();
+    this._initializeRoutes();
+    this._initializeWebSocket();
+    await this.ghostNet.initialize();
+    this._initializeQuantumSync();
+    await this._startServer();
+    return this;
   }
 
-  async _initializeSecurity() {
-    this.app.use(helmet());
+  /** The port the node is actually listening on. */
+  get port() {
+    return this.server.address()?.port;
+  }
 
-    const quantumLimiter = rateLimit({
-      windowMs: this.config.security.rateLimit.window || 60000,
-      max: this.config.security.rateLimit.max || 100,
+  _initializeSecurity() {
+    this.app.disable('x-powered-by');
+    this.app.set('trust proxy', this.config.security.trustProxy);
+
+    this.app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // Nodes are often reached over plain http on a LAN; upgrading
+          // would break the websocket tunnel there
+          upgradeInsecureRequests: null
+        }
+      },
+      strictTransportSecurity: false
+    }));
+
+    const limited = (res, window) => {
+      res.status(429).json({
+        error: 'Quantum limit exceeded',
+        retryAfter: Math.ceil(window / 1000)
+      });
+    };
+
+    const { rateLimit: general, transmitLimit } = this.config.security;
+
+    this.app.use('/api', rateLimit({
+      windowMs: general.window,
+      limit: general.max,
       standardHeaders: true,
       legacyHeaders: false,
-      keyGenerator: (req) => {
-        const input = `${req.ip}:${req.headers['user-agent']}:${Date.now()}`;
-        return createHash('sha256').update(input).digest('hex');
-      },
-      handler: (req, res) => {
-        res.status(429).json({
-          error: 'Quantum limit exceeded',
-          retryAfter: Math.ceil(this.config.security.rateLimit.window / 1000),
-          quantumStability: this.metrics.quantumStability
-        });
-      }
-    });
+      handler: (req, res) => limited(res, general.window)
+    }));
 
-    this.app.use(quantumLimiter);
+    this.transmitLimiter = rateLimit({
+      windowMs: transmitLimit.window,
+      limit: transmitLimit.max,
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler: (req, res) => limited(res, transmitLimit.window)
+    });
   }
 
-  async _initializeMiddleware() {
-    this.app.use(cors({ origin: '*', methods: ['GET', 'POST'], credentials: true }));
+  _initializeMiddleware() {
     this.app.use(compression());
-    this.app.use(express.json({ limit: '50mb', strict: true }));
-    this.app.use(express.static('src/public', { maxAge: '1d', etag: true, lastModified: true }));
+    this.app.use(express.json({ limit: '16kb', strict: true }));
+    this.app.use(express.static(PUBLIC_DIR, { etag: true, lastModified: true }));
 
     this.app.use((req, res, next) => {
       this.metrics.requests++;
@@ -104,145 +105,249 @@ class QuantumServer {
     });
   }
 
-  async _initializeRoutes() {
-    this.app.get('/api/status', (req, res) => {
+  _initializeRoutes() {
+    const { app, ghostNet } = this;
+
+    app.get('/health', (req, res) => {
+      res.json({ status: 'alive', uptime: process.uptime() });
+    });
+
+    app.get('/api/identity', (req, res) => {
       res.json({
-        uptime: process.uptime(),
-        memoryUsage: process.memoryUsage(),
-        cpuUsage: process.cpuUsage(),
-        quantumStability: this.metrics.quantumStability,
-        activePeers: this.connections.size
+        ...ghostNet.getIdentity(),
+        lifetime: this.config.transmission.lifetime,
+        maxLength: this.config.transmission.maxLength
       });
     });
 
-    this.app.post('/api/transmit', async (req, res) => {
+    app.get('/api/status', (req, res) => {
+      res.json({
+        ...ghostNet.getState(),
+        uptime: Math.round((Date.now() - this.metrics.startTime) / 1000),
+        observers: this.connections.size,
+        version: this.config.version
+      });
+    });
+
+    app.get('/api/peers', (req, res) => {
+      res.json({ peers: ghostNet.getPeers(), timestamp: Date.now() });
+    });
+
+    app.get('/api/transmissions', (req, res) => {
+      res.json({
+        transmissions: ghostNet.getTransmissions(),
+        lifetime: this.config.transmission.lifetime,
+        timestamp: Date.now()
+      });
+    });
+
+    app.post('/api/transmit', this.transmitLimiter, (req, res, next) => {
       try {
-        await this._validateQuantumTransmission(req);
-        const transmission = await this.ghostNet.transmit(req.body);
-        this._updateQuantumBuffers('transmission', transmission);
-        res.json({ transmission, timestamp: Date.now(), resonance: this._calculateResonance(transmission) });
+        const transmission = ghostNet.transmit({ content: req.body?.content });
+        res.status(201).json({ transmission, timestamp: Date.now() });
       } catch (error) {
-        this._handleQuantumError(error, res);
+        next(error);
       }
     });
 
-    this.app.get('/api/peers', async (req, res) => {
-      try {
-        const peers = await this.ghostNet.getPeers();
-        res.json({ peers, timestamp: Date.now(), networkStability: this.metrics.quantumStability });
-      } catch (error) {
-        this._handleQuantumError(error, res);
+    app.use('/api', (req, res) => {
+      res.status(404).json({ error: 'No such frequency' });
+    });
+
+    // eslint-disable-next-line no-unused-vars
+    app.use((error, req, res, next) => {
+      const status = error.status || error.statusCode || 500;
+      if (status >= 500) {
+        this.metrics.errors++;
+        console.error('❌ Quantum error:', error);
       }
+      res.status(status).json({
+        error: status >= 500 ? 'The void returned an error' : error.message
+      });
     });
   }
 
-  async _initializeWebSocket() {
-    this.wss = new WebSocketServer({ server: this.server });
+  _initializeWebSocket() {
+    this.browserWss = new WebSocketServer({ noServer: true, maxPayload: 1024 });
+    this.peerWss = new WebSocketServer({
+      noServer: true,
+      maxPayload: this.config.peer.maxPayload
+    });
 
-    this.wss.on('connection', (ws, req) => {
-      const connectionId = randomBytes(16).toString('hex');
-      this.connections.set(connectionId, ws);
-      this._performQuantumHandshake(ws, connectionId, req);
+    this.server.on('upgrade', (req, socket, head) => {
+      let pathname;
+      try {
+        pathname = new URL(req.url, 'http://ghost.net').pathname;
+      } catch {
+        return socket.destroy();
+      }
 
-      ws.on('message', (message) => {
-        try {
-          const data = JSON.parse(message);
-          if (data.type === 'sync') {
-            this._synchronizeQuantumState(ws, data);
-          } else {
-            console.log(`🔹 Quantum Message from ${connectionId}:`, data);
-          }
-        } catch (err) {
-          console.error('❌ Error processing message:', err);
+      if (pathname === '/peer') {
+        this.peerWss.handleUpgrade(req, socket, head, (ws) => {
+          this.ghostNet.attachPeerSocket(ws);
+        });
+      } else if (pathname === '/ws') {
+        this.browserWss.handleUpgrade(req, socket, head, (ws) => {
+          this._handleObserver(ws);
+        });
+      } else {
+        socket.destroy();
+      }
+    });
+
+    // Drop observers whose connection has silently died
+    this.keepAlive = setInterval(() => {
+      for (const ws of this.connections.values()) {
+        if (!ws.isAlive) {
+          ws.terminate();
+          continue;
         }
-      });
+        ws.isAlive = false;
+        ws.ping();
+      }
+    }, 30000);
+    this.keepAlive.unref?.();
+  }
 
-      ws.on('close', () => {
-        this.connections.delete(connectionId);
-      });
+  /**
+   * A browser opened the live feed
+   */
+  _handleObserver(ws) {
+    if (this.connections.size >= this.config.security.maxBrowsers) {
+      ws.close(1013, 'the void is crowded');
+      return;
+    }
 
-      ws.send(JSON.stringify({ status: 'Connected to Quantum Network' }));
-    });
+    const connectionId = randomBytes(8).toString('hex');
+    this.connections.set(connectionId, ws);
+    ws.isAlive = true;
 
-    this.wss.on('error', (error) => {
-      console.error('❌ WebSocket error:', error);
+    ws.on('pong', () => { ws.isAlive = true; });
+    ws.on('close', () => this.connections.delete(connectionId));
+    ws.on('error', () => { /* a close event always follows */ });
+
+    // Everything a new observer needs to render the node as it is now
+    this._sendTo(ws, {
+      type: 'handshake',
+      identity: this.ghostNet.getIdentity(),
+      lifetime: this.config.transmission.lifetime,
+      maxLength: this.config.transmission.maxLength,
+      state: this.ghostNet.getState(),
+      peers: this.ghostNet.getPeers(),
+      history: this.ghostNet.quantumState.history(),
+      transmissions: this.ghostNet.getTransmissions()
     });
   }
 
-  async _startServer() {
-    return new Promise((resolve, reject) => {
-      const port = this.config.peer.network.port || 8080;
+  _initializeQuantumSync() {
+    const { ghostNet } = this;
 
-      this.server.listen(port, () => {
-        console.log(`🔷 Quantum Server running on port ${port}`);
+    ghostNet.on('quantum:pulse', (state) => {
+      this._broadcast({ type: 'sync', state, peers: ghostNet.getPeers() });
+    });
+
+    ghostNet.on('transmission', (transmission) => {
+      this._broadcast({ type: 'transmission', transmission });
+    });
+
+    ghostNet.on('transmission:decayed', (ids) => {
+      this._broadcast({ type: 'decayed', ids });
+    });
+
+    ghostNet.on('peer:connected', (peer) => {
+      this.log(`🔗 entangled with ${peer.id.slice(0, 12)} (${peer.direction})`);
+    });
+
+    ghostNet.on('peer:disconnected', (peer) => {
+      this.log(`⛓️‍💥 entanglement with ${peer.id.slice(0, 12)} collapsed`);
+    });
+  }
+
+  _sendTo(ws, message) {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(message));
+  }
+
+  _broadcast(message) {
+    if (this.connections.size === 0) return;
+    const payload = JSON.stringify(message);
+    for (const ws of this.connections.values()) {
+      if (ws.readyState === ws.OPEN) ws.send(payload);
+    }
+  }
+
+  _startServer() {
+    return new Promise((resolve, reject) => {
+      this.server.once('error', reject);
+      this.server.listen(this.config.port, this.config.host, () => {
+        this.server.off('error', reject);
         resolve();
       });
-
-      this.server.on('error', (error) => {
-        console.error('❌ Quantum Server Error:', error);
-        reject(error);
-      });
     });
   }
 
-  async _initializeQuantumSync() {
-    setInterval(() => {
-      this._updateConsciousnessField();
-      this._broadcastQuantumMetrics();
-    }, 5000);
-  }
+  /**
+   * Release every connection and persist what the node is holding
+   */
+  async shutdown() {
+    clearInterval(this.keepAlive);
 
-  _performQuantumHandshake(ws, connectionId, req) {
-    const peerSignature = createHash('sha256').update(req.headers['user-agent']).digest('hex');
-    this.quantumBuffers.peerSignatures.set(connectionId, peerSignature);
-    ws.send(JSON.stringify({ type: 'handshake', peerId: connectionId, signature: peerSignature }));
-  }
+    for (const ws of this.connections.values()) ws.close(1001, 'node shutting down');
+    await this.ghostNet.shutdown();
 
-  _synchronizeQuantumState(ws, data) {
-    if (data.field) {
-      this.metrics.consciousnessField = new Float32Array(data.field);
-    }
-    ws.send(JSON.stringify({ type: 'sync_ack', field: Array.from(this.metrics.consciousnessField) }));
-  }
-
-  _updateConsciousnessField() {
-    for (let i = 0; i < this.metrics.consciousnessField.length; i++) {
-      this.metrics.consciousnessField[i] += (Math.random() - 0.5) * this.metrics.entropyFactor;
-    }
-    this.metrics.quantumStability = this._calculateQuantumStability();
-  }
-
-  _broadcastQuantumMetrics() {
-    const payload = JSON.stringify({
-      type: 'sync',
-      field: Array.from(this.metrics.consciousnessField),
-      quantumStability: this.metrics.quantumStability
+    await new Promise((resolve) => {
+      this.server.close(() => resolve());
+      this.server.closeAllConnections?.();
     });
-
-    for (const ws of this.connections.values()) {
-      ws.send(payload);
-    }
-  }
-
-  _calculateQuantumStability() {
-    let stability = 0;
-    for (const value of this.metrics.consciousnessField) {
-      stability += Math.exp(-Math.abs(value) * 10);
-    }
-    return stability / this.metrics.consciousnessField.length;
-  }
-
-  _handleQuantumError(error, target) {
-    this.metrics.errors++;
-    const errorResponse = { error: error.message, timestamp: Date.now(), stability: this.metrics.quantumStability };
-    if (target instanceof WebSocket) {
-      target.send(JSON.stringify(errorResponse));
-    } else {
-      target.status(500).json(errorResponse);
-    }
   }
 }
 
-// Start the Quantum Server
-const quantumServer = new QuantumServer();
-quantumServer.initialize();
+// ---------------------------------------------------------------------------
+// Run as a node when started directly
+// ---------------------------------------------------------------------------
+
+const startedDirectly = () => {
+  try {
+    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+};
+
+if (startedDirectly()) {
+  loadEnvFile();
+  const config = createConfig();
+  const quantumServer = new QuantumServer(config);
+
+  try {
+    await quantumServer.initialize();
+  } catch (error) {
+    const reason = error.code === 'EADDRINUSE'
+      ? `port ${config.port} is already in use — set PORT to another one`
+      : error.message;
+    console.error(`❌ Quantum Server initialization failed: ${reason}`);
+    process.exit(1);
+  }
+
+  const identity = quantumServer.ghostNet.getIdentity();
+  const shownHost = ['0.0.0.0', '::'].includes(config.host) ? 'localhost' : config.host;
+
+  console.log(`🔷 ghost_net node ${identity.id}`);
+  console.log(`   interface  http://${shownHost}:${quantumServer.port}`);
+  console.log(`   peer link  ws://${shownHost}:${quantumServer.port}/peer`);
+  console.log(`   holding    ${quantumServer.ghostNet.getTransmissions().length} transmissions`);
+  console.log(config.peer.bootstrap.length > 0
+    ? `   reaching   ${config.peer.bootstrap.join(', ')}`
+    : '   reaching   no bootstrap nodes — waiting to be found');
+
+  let closing = false;
+  const shutdown = async (signal) => {
+    if (closing) return;
+    closing = true;
+    console.log(`\n🔻 ${signal} — dissolving node`);
+    await quantumServer.shutdown();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}

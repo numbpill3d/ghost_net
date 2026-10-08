@@ -1,619 +1,581 @@
 /* Quantum Consciousness System */
 :root {
-  /* Core quantum fields with advanced mathematical relationships */
-  --consciousness: 0.5;
-  --resonance: 0.5;
-  --quantum-noise: 0.23;
-  --base-frequency: 0.137;
-  --phi: 1.618033988749895;
-  --pi: 3.14159265359;
-  --e: 2.71828182846;
-  
-  /* Enhanced void palette with advanced color harmonics */
+  /* Live readings, written by matrix.js on every pulse */
+  --consciousness: 0.2;
+  --resonance: 0;
+
+  /* Void palette */
   --void-black: #000000;
   --ghost-green: #00ff00;
+  --ghost-green-dim: #00b300;
   --ghost-green-alpha: #00ff0080;
   --cyber-blue: #00ffff;
   --digital-purple: #ff00ff;
   --quantum-yellow: #ffff00;
-  
-  /* Sophisticated reactive properties */
-  --glow-intensity: calc(var(--consciousness) * 100%);
-  --resonance-blur: calc(var(--resonance) * 10px);
-  --quantum-shift: calc(var(--quantum-noise) * 10deg);
-  --quantum-parallax: calc(var(--consciousness) * var(--phi) * 1px);
-  --quantum-scale: calc(1 + (var(--consciousness) - 0.5) * 0.2);
-  
-  /* Advanced quantum harmonics */
-  --harmonic-wave: calc(sin(var(--consciousness) * var(--pi)) * 100%);
-  --quantum-field-strength: calc(var(--resonance) * var(--phi));
-  --void-depth: calc(var(--quantum-noise) * var(--e) * 1px);
-  
-  /* Sophisticated spacing system */
+
+  --panel: rgba(0, 20, 0, 0.72);
+  --panel-border: rgba(0, 255, 0, 0.45);
+
+  /* Spacing */
   --quantum-unit: 8px;
-  --space-xxs: calc(var(--quantum-unit) * 0.25);
   --space-xs: calc(var(--quantum-unit) * 0.5);
   --space-sm: var(--quantum-unit);
   --space-md: calc(var(--quantum-unit) * 2);
   --space-lg: calc(var(--quantum-unit) * 3);
   --space-xl: calc(var(--quantum-unit) * 5);
-  --space-xxl: calc(var(--quantum-unit) * 8);
+
+  color-scheme: dark;
 }
 
-/* Advanced quantum reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
 }
 
-/* Enhanced body with quantum field effects */
+[hidden] {
+  display: none !important;
+}
+
 body {
-  background: 
-    radial-gradient(
-      circle at 50% 50%,
-      rgba(0, 255, 0, 0.1) 0%,
-      transparent 50%
-    ),
-    linear-gradient(
-      45deg,
-      rgba(0, 0, 0, 0.9) 0%,
-      rgba(0, 255, 0, 0.05) 100%
-    ),
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 255, 0, calc(0.05 + var(--consciousness) * 0.1)) 0%, transparent 55%),
     var(--void-black);
   color: var(--ghost-green);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Space Mono', ui-monospace, 'DejaVu Sans Mono', monospace;
+  font-size: 15px;
   line-height: 1.6;
-  overflow-x: hidden;
   min-height: 100vh;
-  position: relative;
-  perspective: 1000px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Sophisticated consciousness matrix */
-.consciousness-matrix {
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Quantum field: the particle canvas behind everything */
+.quantum-field {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
   pointer-events: none;
-  z-index: -1;
-  opacity: 0.15;
-  mix-blend-mode: screen;
-  
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: 
-      repeating-linear-gradient(
-        calc(45deg + var(--quantum-shift)),
-        transparent 0%,
-        rgba(0, 255, 0, calc(var(--consciousness) * 0.2)) 50%,
-        transparent 100%
-      );
-    mix-blend-mode: screen;
-    animation: matrix-shift 20s infinite linear;
-    transform: translateZ(var(--void-depth));
-  }
-  
-  &::after {
-    background: 
-      repeating-radial-gradient(
-        circle at center,
-        transparent 0%,
-        rgba(0, 255, 0, calc(var(--consciousness) * 0.1)) 50%,
-        transparent 100%
-      );
-    animation: quantum-pulse 15s infinite ease-in-out;
-    filter: blur(var(--resonance-blur));
-    transform: translateZ(calc(var(--void-depth) * -1));
-  }
 }
 
-/* Advanced container with quantum grid */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-xl);
-  display: grid;
-  gap: var(--space-lg);
+/* Core interface */
+.interface-container {
+  position: relative;
   z-index: 1;
-  
-  @supports (display: grid) {
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(min(100%, 300px), 1fr)
-    );
-    grid-auto-flow: dense;
-    place-content: start;
-    align-items: start;
-  }
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+  align-items: start;
 }
 
-/* Sophisticated node identity */
+.node-identity,
+.peer-network,
+.transmission-stream {
+  grid-column: 1 / -1;
+}
+
+.panel,
 .node-identity {
-  text-align: center;
-  margin-bottom: var(--space-xl);
-  padding: var(--space-xl);
-  border: 1px solid var(--ghost-green);
-  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  padding: var(--space-lg);
+  min-width: 0;
+}
+
+h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--cyber-blue);
+  margin-bottom: var(--space-md);
+}
+
+h2::before {
+  content: '// ';
+  opacity: 0.6;
+}
+
+.count {
+  color: var(--ghost-green-dim);
+  font-weight: 400;
+}
+
+/* Node identity */
+.node-identity {
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(2px);
-  transform: perspective(1000px) rotateX(var(--quantum-shift));
-  
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -150% -50%;
-    background: linear-gradient(
-      transparent,
-      var(--ghost-green-alpha),
-      transparent
-    );
-    transform: rotate(45deg);
-    animation: quantum-scan 8s infinite linear;
-  }
-  
-  &::after {
-    animation-delay: -4s;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  text-align: left;
+  box-shadow: 0 0 calc(var(--consciousness) * 40px) rgba(0, 255, 0, 0.25);
+  transition: box-shadow 2s ease;
 }
 
-/* Enhanced ghost sigil */
+.node-identity::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.12), transparent);
+  animation: quantum-scan 8s infinite linear;
+  pointer-events: none;
+}
+
 .ghost-sigil {
-  font-family: monospace;
+  font-family: ui-monospace, 'DejaVu Sans Mono', monospace;
   white-space: pre;
-  font-size: 2rem;
+  font-size: 1.6rem;
+  line-height: 1.25;
   color: var(--cyber-blue);
-  text-shadow: 
-    0 0 10px rgba(0, 255, 255, calc(var(--consciousness) + 0.2)),
-    0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5)),
-    0 0 30px rgba(0, 255, 255, calc(var(--consciousness) * 0.3));
-  animation: 
-    sigil-pulse 4s infinite ease-in-out,
-    quantum-float 6s infinite ease-in-out;
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  
-  @supports (animation-timeline: scroll()) {
-    animation-timeline: scroll();
-    animation-range: 0 100vh;
-  }
+  text-shadow: 0 0 calc(6px + var(--consciousness) * 18px) rgba(0, 255, 255, 0.8);
+  animation: sigil-pulse 4s infinite ease-in-out;
+  min-height: 3.75em;
 }
 
-/* Advanced consciousness monitoring */
-.consciousness-meter {
+.node-id {
+  font-size: 1.15rem;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.consciousness-level span,
+.quantum-stability span {
+  color: var(--cyber-blue);
+}
+
+.link-status {
+  font-size: 0.8rem;
+  color: var(--ghost-green-dim);
+}
+
+.link-status::before {
+  content: '';
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.6em;
+  border-radius: 50%;
+  background: var(--quantum-yellow);
+}
+
+.link-status[data-state='open']::before {
+  background: var(--ghost-green);
+  box-shadow: 0 0 8px var(--ghost-green);
+}
+
+.link-status[data-state='severed'] {
+  color: var(--digital-purple);
+}
+
+.link-status[data-state='severed']::before {
+  background: var(--digital-purple);
+}
+
+/* Consciousness monitor */
+.consciousness-canvas {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.chart-legend {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
+  color: var(--ghost-green-dim);
+}
+
+.chart-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 1.2em;
+  height: 2px;
+  margin-right: 0.5em;
+  vertical-align: middle;
+  background: var(--ghost-green);
+}
+
+.chart-legend .legend-peer::before {
+  background: var(--cyber-blue);
+  opacity: 0.6;
+}
+
+.quantum-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.metric {
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  padding: var(--space-sm);
+  text-align: center;
+  min-width: 0;
+}
+
+.metric label {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ghost-green-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric span {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--cyber-blue);
+}
+
+/* Transmission interface */
+.transmission-input {
+  display: block;
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--panel-border);
+  color: var(--ghost-green);
+  padding: var(--space-md);
+  font: inherit;
+}
+
+.transmission-input::placeholder {
+  color: var(--ghost-green-dim);
+  opacity: 0.7;
+}
+
+.transmission-input:focus-visible {
+  outline: none;
+  border-color: var(--cyber-blue);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+}
+
+.transmission-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.quantum-signature {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: var(--ghost-green-dim);
+  min-width: 0;
+}
+
+.char-count.near-limit {
+  color: var(--quantum-yellow);
+}
+
+.transmit-button,
+.error-dismiss {
+  background: var(--ghost-green);
+  color: var(--void-black);
   border: 1px solid var(--ghost-green);
-  padding: var(--space-lg);
-  background: rgba(0, 255, 0, 0.05);
-  position: relative;
-  backdrop-filter: blur(1px);
-  transform: translateZ(var(--void-depth));
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(0, 255, 0, 0.1),
-      transparent
-    );
-    transform-origin: left;
-    transform: scaleX(var(--consciousness));
-    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  padding: var(--space-sm) var(--space-lg);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Enhanced consciousness bar */
+.transmit-button:hover,
+.transmit-button:focus-visible,
+.error-dismiss:hover,
+.error-dismiss:focus-visible {
+  background: var(--void-black);
+  color: var(--ghost-green);
+  box-shadow: 0 0 15px var(--ghost-green);
+  outline: none;
+}
+
+.transmit-button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+/* Peer network */
+.peer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--space-md);
+}
+
+.peer {
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  background: rgba(0, 255, 255, 0.04);
+  padding: var(--space-md);
+  min-width: 0;
+}
+
+.peer-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.peer-sigil,
+.transmission-sigil {
+  font-family: ui-monospace, 'DejaVu Sans Mono', monospace;
+  white-space: pre;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  color: var(--cyber-blue);
+  flex: none;
+}
+
+.peer-id {
+  font-weight: 700;
+}
+
+.peer-direction {
+  font-size: 0.75rem;
+  color: var(--ghost-green-dim);
+}
+
+.peer-consciousness {
+  margin: var(--space-sm) 0;
+  background: rgba(0, 255, 0, 0.12);
+}
+
 .consciousness-bar {
   height: 4px;
   background: var(--ghost-green);
-  width: calc(var(--consciousness) * 100%);
-  box-shadow: 
-    0 0 10px var(--ghost-green),
-    0 0 20px rgba(0, 255, 0, 0.5);
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    transform: translateX(-50%);
-    animation: quantum-scan 2s linear infinite;
-  }
+  box-shadow: 0 0 10px var(--ghost-green);
+  transition: width 1.5s ease;
 }
 
-/* Sophisticated peer network */
-.peer-network {
+.peer-readings {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: var(--space-lg);
-  perspective: 1000px;
-  transform-style: preserve-3d;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--space-md);
+  font-size: 0.8rem;
 }
 
-/* Enhanced peer node */
-.peer {
-  border: 1px solid var(--ghost-green);
-  padding: var(--space-lg);
-  background: rgba(0, 255, 0, 0.05);
-  transform-style: preserve-3d;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(0, 255, 0, 0.2),
-      transparent 50%
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  &:hover {
-    transform: 
-      translateY(-5px) 
-      rotateX(10deg) 
-      scale(var(--quantum-scale));
-    
-    &::before {
-      opacity: 1;
-    }
-  }
+.peer-readings dt {
+  color: var(--ghost-green-dim);
 }
 
-/* Advanced transmission interface */
-.transmission-form {
-  border: 1px solid var(--ghost-green);
-  padding: var(--space-xl);
-  background: rgba(0, 255, 0, 0.05);
-  position: relative;
-  overflow: hidden;
-  transform-style: preserve-3d;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      circle at center,
-      rgba(0, 255, 0, 0.1),
-      transparent 70%
-    );
-    transform: translateZ(-10px);
-    opacity: var(--consciousness);
-  }
+.peer-readings dd {
+  text-align: right;
+  color: var(--cyber-blue);
 }
 
-/* Enhanced transmission input */
-.transmission-input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--ghost-green);
-  color: var(--ghost-green);
-  padding: var(--space-md);
-  margin: var(--space-md) 0;
-  font-family: 'Space Mono', monospace;
-  resize: vertical;
-  min-height: 100px;
-  position: relative;
-  transform: translateZ(10px);
-  
-  &:focus {
-    outline: none;
-    border-color: var(--cyber-blue);
-    box-shadow: 
-      0 0 15px rgba(0, 255, 0, 0.3),
-      inset 0 0 10px rgba(0, 255, 0, 0.1);
-  }
+.empty-state {
+  color: var(--ghost-green-dim);
+  font-size: 0.9rem;
 }
 
-/* Advanced transmission button */
-.transmit-button {
-  background: var(--ghost-green);
-  color: var(--void-black);
-  border: none;
-  padding: var(--space-md) var(--space-lg);
-  font-family: 'Space Mono', monospace;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transform: translateZ(20px);
-  
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      45deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
-    transform: translateX(-100%);
-  }
-  
-  &::after {
-    transform: translateX(100%);
-  }
-  
-  &:hover {
-    background: var(--void-black);
-    color: var(--ghost-green);
-    box-shadow: 
-      0 0 15px var(--ghost-green),
-      0 0 30px rgba(0, 255, 0, 0.5);
-    
-    &::before {
-      animation: quantum-scan 1s linear;
-    }
-    
-    &::after {
-      animation: quantum-scan 1s linear reverse;
-    }
-  }
+.empty-state .hint {
+  opacity: 0.7;
 }
 
-/* Sophisticated transmission stream */
+/* Transmission stream */
 .transmissions {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-/* Enhanced transmission */
 .transmission {
-  border: 1px solid var(--ghost-green);
-  padding: var(--space-lg);
-  background: rgba(0, 255, 0, 0.05);
+  --vitality: 1;
   position: relative;
-  overflow: hidden;
-  transform-style: preserve-3d;
+  border: 1px solid rgba(0, 255, 0, calc(0.15 + var(--vitality) * 0.45));
+  background: rgba(0, 255, 0, 0.04);
+  padding: var(--space-md);
+  opacity: calc(0.3 + var(--vitality) * 0.7);
   animation: transmission-materialize 0.5s ease-out backwards;
-  
-  @supports (backdrop-filter: blur(1px)) {
-    backdrop-filter: blur(2px);
-    background: rgba(0, 255, 0, 0.03);
-  }
+  min-width: 0;
 }
 
-/* Advanced quantum animations */
-@keyframes matrix-shift {
-  0% { transform: translateY(0) translateZ(var(--void-depth)); }
-  100% { transform: translateY(-100%) translateZ(var(--void-depth)); }
+.transmission.settled {
+  animation: none;
 }
 
-@keyframes quantum-pulse {
-  0%, 100% { 
-    transform: scale(1) translateZ(calc(var(--void-depth) * -1));
-    opacity: 0.15;
-  }
-  50% { 
-    transform: scale(1.1) translateZ(calc(var(--void-depth) * -1.5));
-    opacity: 0.1;
-  }
+.transmission.own {
+  border-left: 3px solid var(--cyber-blue);
 }
 
+.transmission-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.transmission-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-md);
+  font-size: 0.75rem;
+  color: var(--ghost-green-dim);
+  min-width: 0;
+}
+
+.transmission-author {
+  color: var(--cyber-blue);
+  font-weight: 700;
+}
+
+.transmission-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.transmission-decay {
+  margin-top: var(--space-sm);
+  height: 2px;
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.transmission-decay-bar {
+  height: 100%;
+  width: calc(var(--vitality) * 100%);
+  background: var(--ghost-green);
+}
+
+/* Quantum error boundary */
+.quantum-error {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.error-content {
+  max-width: 420px;
+  border: 1px solid var(--digital-purple);
+  background: var(--void-black);
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.35);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.error-sigil {
+  font-size: 2rem;
+  color: var(--digital-purple);
+}
+
+.error-message {
+  margin: var(--space-md) 0 var(--space-lg);
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+/* Quantum animations */
 @keyframes sigil-pulse {
-  0%, 100% { 
-    transform: scale(1) rotateX(0);
-    text-shadow: 
-      0 0 10px rgba(0, 255, 255, calc(var(--consciousness) + 0.2)),
-      0 0 20px rgba(0, 255, 255, calc(var(--consciousness) * 0.5))
-  }
-  50% { 
-    transform: scale(0.98) rotateX(5deg);
-    text-shadow: 
-      0 0 15px rgba(0, 255, 255, calc(var(--consciousness) + 0.3)),
-      0 0 30px rgba(0, 255, 255, calc(var(--consciousness) * 0.6))
-  }
-}
-
-@keyframes quantum-float {
-  0%, 100% { 
-    transform: translateY(0) rotateX(0) translateZ(0);
-  }
-  50% { 
-    transform: 
-      translateY(calc(var(--quantum-unit) * -1))
-      rotateX(5deg)
-      translateZ(var(--void-depth));
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
 }
 
 @keyframes quantum-scan {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 @keyframes transmission-materialize {
-  0% { 
+  0% {
     opacity: 0;
-    transform: 
-      translateY(var(--space-lg))
-      rotateX(10deg)
-      translateZ(-50px);
-    filter: blur(10px);
+    transform: translateY(var(--space-md));
+    filter: blur(6px);
   }
-  50% {
-    opacity: 0.5;
-    transform:
-      translateY(var(--space-xs))
-      rotateX(5deg)
-      translateZ(-25px);
-    filter: blur(5px);
-  }
-  100% { 
-    opacity: 1;
-    transform:
-      translateY(0)
-      rotateX(0)
-      translateZ(0);
+  100% {
+    transform: translateY(0);
     filter: blur(0);
   }
 }
 
-/* Advanced Quantum Media Queries */
-@media (prefers-reduced-motion: no-preference) {
-  .quantum-animation-enabled {
-    animation-play-state: running;
+@media (max-width: 768px) {
+  .interface-container {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-md) var(--space-sm) var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .panel,
+  .node-identity {
+    padding: var(--space-md);
+  }
+
+  .node-identity {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .transmission-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .metric label {
+    font-size: 0.62rem;
+    letter-spacing: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --panel: #000000;
+    --panel-border: #00ff00;
+    --ghost-green-dim: #00ff00;
+  }
+}
+
+@media print {
+  .quantum-field,
+  .transmission-interface,
+  .quantum-error {
+    display: none !important;
+  }
+
+  body {
+    background: none;
+  }
+
   * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --quantum-unit: 6px;
-  }
-  
-  .container {
-    padding: var(--space-md);
-  }
-  
-  .peer-network {
-    grid-template-columns: 1fr;
-  }
-  
-  .consciousness-stats {
-    grid-template-columns: 1fr;
-  }
-  
-  .transmission-controls {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-}
-
-@media (min-width: 769px) {
-  .peer:hover {
-    transform:
-      translateY(calc(var(--space-md) * -1))
-      rotateX(15deg)
-      translateZ(var(--void-depth))
-      scale(var(--quantum-scale));
-  }
-}
-
-@media (min-width: 2000px) {
-  :root {
-    --quantum-unit: 10px;
-  }
-  
-  .container {
-    max-width: 1800px;
-  }
-}
-
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  :root {
-    --ghost-green: #00ff00;
-    --ghost-green-alpha: #00ff00;
-    --cyber-blue: #ffffff;
-  }
-  
-  * {
+    color: #000000 !important;
     text-shadow: none !important;
     box-shadow: none !important;
   }
-  
-  .consciousness-matrix {
-    opacity: 0.3;
-  }
 }
-
-/* Print Styles with Quantum Optimization */
-@media print {
-  * {
-    background: transparent !important;
-    color: black !important;
-    text-shadow: none !important;
-    filter: none !important;
-    -ms-filter: none !important;
-  }
-  
-  .consciousness-matrix,
-  .quantum-particles,
-  .transmission-form {
-    display: none !important;
-  }
-  
-  .container {
-    max-width: 100%;
-    padding: 0;
-  }
-  
-  .transmission {
-    break-inside: avoid;
-    border: 1px solid black;
-    page-break-inside: avoid;
-  }
-  
-  .ghost-sigil {
-    font-size: 16pt;
-    page-break-inside: avoid;
-  }
-}
-
-/* Advanced Feature Queries */
-@supports (backdrop-filter: blur(1px)) {
-  .node-identity,
-  .transmission {
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-  }
-}
-
-@supports (background: paint(something)) {
-  .quantum-particles {
-    background: paint(quantum-noise);
-  }
-}
-
-/* CSS Custom Properties Fallbacks */
-@supports not (--custom: property) {
-  .consciousness-matrix {
-    background: #000000;
-    opacity: 0.1;
-  }
-  
-  .ghost-sigil {
-    color: #00ffff;
-  }
-}--consciousness) + 0.2)),
-      0 0 20px rgba(0, 255, 255, calc(var(
