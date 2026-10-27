@@ -11,7 +11,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "demo": "node scripts/demo.js",
-    "test": "node --test test/*.test.js",
+    "test": "node --import ./test/loopback-no-proxy.js --test test/*.test.js",
     "e2e": "node test/e2e.mjs"
   },
   "keywords": [
