@@ -515,6 +515,18 @@ export class PeerNetwork extends EventEmitter {
 
   _close(link, code, reason, force = false) {
     clearTimeout(link.handshakeTimer);
+
+    // A close handshake is asynchronous. Remove a verified link from the
+    // live peer set before starting it so callers never observe a peer that
+    // has already been rejected or timed out. The close event still owns
+    // address backoff and final link cleanup.
+    if (link.verified && this.peers.get(link.id) === link) {
+      this.peers.delete(link.id);
+      if (!link.benign) {
+        this.emit('peer:disconnected', { id: link.id, timestamp: this.now() });
+      }
+    }
+
     try {
       if (force) link.ws.terminate();
       else link.ws.close(code, reason);
