@@ -147,6 +147,7 @@ with a shorter one lets transmissions go sooner than its peers do.
 | `GET /api/transmissions` | Held transmissions, newest first, and the lifetime. |
 | `POST /api/transmit` | Body `{"content": "text"}`. Signs and sends a transmission; returns it with status 201. On a locked node, send `Authorization: Bearer <TRANSMIT_KEY>`. |
 | `GET /health` | `{"status": "alive"}`. |
+| `GET /ready` | `{"status": "ready"}` once the node has initialized; returns HTTP 503 while starting or shutting down. |
 | `WS /ws` | Live feed for the interface: `handshake`, then `sync`, `transmission` and `decayed` messages. |
 | `WS /peer` | Node-to-node link. |
 
@@ -185,7 +186,8 @@ docker run -p 3000:3000 -v ghost_data:/data \
 ```
 
 Put it behind TLS and set `TRUST_PROXY=1` so rate limits see the real client
-address. `fly.toml` is the configuration of the public node above, deployed
+address. The `/health` check confirms the process is alive; `/ready` confirms
+the node has initialized its identity, storage and peer network. `fly.toml` is the configuration of the public node above, deployed
 to Fly.io with `fly deploy --ha=false`; it must stay a single machine that
 never sleeps, since a stopped node holds no links.
 

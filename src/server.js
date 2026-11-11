@@ -32,6 +32,7 @@ export class QuantumServer {
       requests: 0,
       errors: 0
     };
+    this.ready = false;
 
     // Browsers watching this node
     this.connections = new Map();
@@ -45,6 +46,7 @@ export class QuantumServer {
     await this.ghostNet.initialize();
     this._initializeQuantumSync();
     await this._startServer();
+    this.ready = true;
     return this;
   }
 
@@ -123,6 +125,11 @@ export class QuantumServer {
 
     app.get('/health', (req, res) => {
       res.json({ status: 'alive', uptime: process.uptime() });
+    });
+
+    app.get('/ready', (req, res) => {
+      if (!this.ready) return res.status(503).json({ status: 'starting' });
+      res.json({ status: 'ready', uptime: process.uptime() });
     });
 
     app.get('/api/identity', (req, res) => {
@@ -302,6 +309,7 @@ export class QuantumServer {
    * Release every connection and persist what the node is holding
    */
   async shutdown() {
+    this.ready = false;
     clearInterval(this.keepAlive);
 
     for (const ws of this.connections.values()) ws.close(1001, 'node shutting down');

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createConfig, normalizePeerUrl, parsePeerList } from '../config.js';
@@ -19,12 +19,32 @@ test('identity: id is bound to the keypair and survives a restart', async () => 
     assert.match(first.id, /^[0-9a-f]{32}$/);
     assert.equal(first.id, nodeIdFromPublicKey(first.publicKey));
     assert.equal(second.id, first.id);
+    assert.equal((await stat(dir)).mode & 0o777, 0o700);
+    assert.equal((await stat(path.join(dir, 'identity.json'))).mode & 0o777, 0o600);
 
     const signature = first.sign('into the void');
     assert.ok(verifySignature('into the void', signature, second.publicKey));
     assert.ok(!verifySignature('into the vOid', signature, second.publicKey));
     assert.ok(!verifySignature('into the void', signature, createIdentity().publicKey));
     assert.ok(!verifySignature('into the void', signature, 'not a key'));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('persistence files stay private even with a permissive process umask', async () => {
+  const dir = await tempDir();
+  try {
+    await chmod(dir, 0o777);
+    const config = createConfig({ DATA_DIR: dir });
+    const handler = new TransmissionHandler(config);
+    await handler.initialize(createIdentity());
+    handler.create('private signal', 0.5);
+    await handler.flush();
+
+    assert.equal((await stat(dir)).mode & 0o777, 0o700);
+    assert.equal((await stat(path.join(dir, 'transmissions.json'))).mode & 0o777, 0o600);
+    assert.deepEqual(JSON.parse(await readFile(path.join(dir, 'transmissions.json'))).length, 1);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

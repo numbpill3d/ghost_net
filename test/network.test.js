@@ -89,6 +89,7 @@ test('a single node: post, read back, live feed, input limits', async (t) => {
 
   assert.equal((await fetch(`${node.http}/api/nothing`)).status, 404);
   assert.equal((await void_.get(node, '/health')).status, 'alive');
+  assert.equal((await void_.get(node, '/ready')).status, 'ready');
 
   const status_ = await void_.get(node, '/api/status');
   assert.equal(status_.transmissions, 1);

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nodeIdFromPublicKey, sha256, verifySignature } from './identity.js';
 
@@ -85,7 +85,8 @@ export class TransmissionHandler extends EventEmitter {
    */
   async initialize(identity) {
     this.identity = identity;
-    await mkdir(this.config.dataDir, { recursive: true });
+    await mkdir(this.config.dataDir, { recursive: true, mode: 0o700 });
+    await chmod(this.config.dataDir, 0o700);
 
     let stored = [];
     try {
@@ -255,8 +256,9 @@ export class TransmissionHandler extends EventEmitter {
 
     this._saving = this._saving.catch(() => {}).then(async () => {
       const temp = `${this.file}.tmp`;
-      await mkdir(this.config.dataDir, { recursive: true });
-      await writeFile(temp, JSON.stringify(this.list()));
+      await mkdir(this.config.dataDir, { recursive: true, mode: 0o700 });
+      await chmod(this.config.dataDir, 0o700);
+      await writeFile(temp, JSON.stringify(this.list()), { mode: 0o600 });
       await rename(temp, this.file);
     });
     return this._saving;

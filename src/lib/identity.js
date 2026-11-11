@@ -6,7 +6,7 @@ import {
   sign as edSign,
   verify as edVerify
 } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -78,7 +78,8 @@ export async function loadOrCreateIdentity(dataDir) {
   const { privateKey } = generateKeyPairSync('ed25519');
   const birthTimestamp = Date.now();
 
-  await mkdir(dataDir, { recursive: true });
+  await mkdir(dataDir, { recursive: true, mode: 0o700 });
+  await chmod(dataDir, 0o700);
   await writeFile(
     file,
     JSON.stringify({

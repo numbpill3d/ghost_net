@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import WebSocket from 'ws';
 import { normalizePeerUrl } from '../../config.js';
@@ -134,8 +134,9 @@ export class PeerNetwork extends EventEmitter {
 
     this._saving = this._saving.catch(() => {}).then(async () => {
       const temp = `${this.addressFile}.tmp`;
-      await mkdir(this.config.dataDir, { recursive: true });
-      await writeFile(temp, JSON.stringify(proven, null, 2));
+      await mkdir(this.config.dataDir, { recursive: true, mode: 0o700 });
+      await chmod(this.config.dataDir, 0o700);
+      await writeFile(temp, JSON.stringify(proven, null, 2), { mode: 0o600 });
       await rename(temp, this.addressFile);
     }).catch((error) => {
       console.warn(`⚠ could not persist peer addresses: ${error.message}`);
