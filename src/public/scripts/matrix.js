@@ -4,7 +4,7 @@
  * holding and who it is entangled with, and sends transmissions through it.
  */
 
-const SIGIL_GLYPHS = ['⚡', '□', '▽', '○', '╳', '△', '╱', '╲', '☯', '✧'];
+const SIGIL_GLYPHS = ['+', '□', '▽', '○', '×', '△', '/', '\\', '=', '*'];
 const HISTORY_LENGTH = 120;
 const BASE_TITLE = document.title;
 const KEY_STORAGE = 'ghost_net:node-key';
@@ -175,7 +175,7 @@ class QuantumField {
         const dy = particles[i].y - particles[j].y;
         const distance = Math.hypot(dx, dy);
         if (distance >= reach) continue;
-        ctx.strokeStyle = `rgba(0, 255, 255, ${(1 - distance / reach) * lineStrength})`;
+        ctx.strokeStyle = `rgba(155, 155, 150, ${(1 - distance / reach) * lineStrength})`;
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
         ctx.lineTo(particles[j].x, particles[j].y);
@@ -183,7 +183,7 @@ class QuantumField {
       }
     }
 
-    ctx.fillStyle = `rgba(0, 255, 0, ${0.25 + this.consciousness * 0.5})`;
+    ctx.fillStyle = `rgba(215, 215, 210, ${0.18 + this.consciousness * 0.38})`;
     for (const p of particles) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -191,7 +191,7 @@ class QuantumField {
     }
 
     for (const ripple of this.ripples) {
-      ctx.strokeStyle = `rgba(0, 255, 0, ${ripple.life * 0.5})`;
+      ctx.strokeStyle = `rgba(125, 107, 158, ${ripple.life * 0.42})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
@@ -386,7 +386,7 @@ class ConsciousnessMatrix {
     const y = (value) => height - pad - clamp01(value) * (height - pad * 2);
 
     // quarter lines
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.12)';
+    ctx.strokeStyle = 'rgba(155, 155, 150, 0.16)';
     ctx.lineWidth = 1;
     for (const level of [0.25, 0.5, 0.75]) {
       ctx.beginPath();
@@ -407,8 +407,8 @@ class ConsciousnessMatrix {
       ctx.stroke();
     };
 
-    for (const values of this.peerHistory.values()) trace(values, 'rgba(0, 255, 255, 0.45)', 1);
-    trace(this.history, '#00ff00', 2);
+    for (const values of this.peerHistory.values()) trace(values, 'rgba(125, 107, 158, 0.52)', 1);
+    trace(this.history, '#d7d7d2', 2);
   }
 
   // -------------------------------------------------------------------
