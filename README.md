@@ -7,7 +7,7 @@ to the nodes it is connected to, and forgets it after ten days.
 
 Landing page: <https://numbpill3d.github.io/ghost_net/>
 
-![a ghost_net node's interface: identity, consciousness chart, one peer and two transmissions](docs/assets/interface.png)
+![ghost_net's monochrome CRT interface: node identity, consciousness matrix, one peer, and the transmission stream](docs/assets/interface.png)
 
 ## Quickstart
 
