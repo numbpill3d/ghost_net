@@ -22,6 +22,19 @@ The repository includes a static 88×31 badge for sites that publish a Tor onion
 
 The SVG is presentation-only: it contains no script, beacon, remote resource, or tracking pixel. Link it to the signed onion-service metadata or Onion-Location target your site publishes.
 
+To generate the badge only after verifying a signed metadata file:
+
+```bash
+node scripts/onion-badge.js signed-onion-service.json public/onion-service-badge.svg
+node scripts/onion-badge.js signed-onion-service.json public/onion-service-badge.svg --header
+```
+
+The signed file contains `version`, `site`, `onion`, `publicKey`, and `signature`. The signature covers the canonical `version`, `site`, and `onion` values, and the generator rejects altered, credential-bearing, non-HTTPS site URLs or non-v3 onion addresses before writing the SVG. Serve the printed header, or add the equivalent HTML, to advertise the Onion-Location:
+
+```html
+<meta http-equiv="onion-location" content="http://your-56-character-v3-address.onion/">
+```
+
 ## Quickstart
 
 Needs Node.js 20.12 or newer.
