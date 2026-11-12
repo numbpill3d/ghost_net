@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="88" height="31" viewBox="0 0 88 31" role="img" aria-labelledby="title desc">
+  <title id="title">Onion service available</title>
+  <desc id="desc">A monochrome web badge indicating that a site is available through a Tor onion service.</desc>
+  <defs>
+    <pattern id="dither" width="4" height="4" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r=".45" fill="#a9a2b7" opacity=".52"/>
+      <circle cx="3" cy="3" r=".45" fill="#a9a2b7" opacity=".22"/>
+    </pattern>
+  </defs>
+
+  <rect width="88" height="31" fill="#070707"/>
+  <rect x=".5" y=".5" width="87" height="30" fill="url(#dither)" stroke="#bdbdb7"/>
+  <rect x="2.5" y="2.5" width="20" height="26" fill="#111110" stroke="#4a4a46"/>
+
+  <!-- small onion mark, deliberately geometric at badge scale -->
+  <path d="M12.5 8.2c-2.7 0-4.8 2.6-4.8 6.1 0 4.6 2.4 7.1 4.8 7.1s4.8-2.5 4.8-7.1c0-3.5-2.1-6.1-4.8-6.1Z" fill="none" stroke="#d7d7d2" stroke-width="1"/>
+  <path d="M12.5 8.2c-.8-1.7.3-3.1 1.5-3.7M12.5 8.2c.8-1.7-.3-3.1-1.5-3.7M8.5 16h8M9.1 19h6.8" fill="none" stroke="#a695c3" stroke-width="1"/>
+  <path d="M6.5 24.2h12" stroke="#777772" stroke-width="1"/>
+
+  <text x="26" y="12.2" fill="#f0f0e9" font-family="monospace" font-size="7" font-weight="700" letter-spacing=".45">ONION</text>
+  <text x="26" y="20.2" fill="#d7d7d2" font-family="monospace" font-size="6.2" letter-spacing=".15">SERVICE</text>
+  <text x="26" y="26.2" fill="#a695c3" font-family="monospace" font-size="5.2" letter-spacing=".25">VIA TOR</text>
+</svg>

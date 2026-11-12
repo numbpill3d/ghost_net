@@ -9,6 +9,19 @@ Landing page: <https://numbpill3d.github.io/ghost_net/>
 
 ![ghost_net's monochrome CRT interface: node identity, consciousness matrix, one peer, and the transmission stream](docs/assets/interface.png)
 
+### Onion service badge
+
+The repository includes a static 88×31 badge for sites that publish a Tor onion counterpart:
+
+```html
+<a href="http://your-service-address.onion/" rel="noreferrer">
+  <img src="/assets/onion-service-badge.svg" width="88" height="31"
+       alt="Available as an onion service via Tor">
+</a>
+```
+
+The SVG is presentation-only: it contains no script, beacon, remote resource, or tracking pixel. Link it to the signed onion-service metadata or Onion-Location target your site publishes.
+
 ## Quickstart
 
 Needs Node.js 20.12 or newer.
